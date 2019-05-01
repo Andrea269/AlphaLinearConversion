@@ -1,10 +1,9 @@
 # AlphaLinearConversion
-This project focuses on the realization of a graph visit algorithm.
-This graph represents in the nodes distinct lambda terms according to a suitable coding in:
-* Lam Nodes: Lambda abstraction
-* App Nodes: Application
-* Var Nodes: Variable
-
-The graph provided as input to the algorithm will represent 2 graphs joined by a root node connected to the respective roots of the 2 graphs.
-These graphs will be compared to show whether they represent the same lambda expression, evaluating in the complex case also under the lambda abstractions.
-In the complex case we will use the Crumbling Abstract Machines by applying a process of crumbling the lambda terms.
+This project focuses on the realization of a two-graph visit algorithm to determine if they represent the same lambda expression.
+Each graph represents in the nodes distinct lambda terms according to a suitable coding in:
+- Lam Nodes: Lambda abstraction
+- App Nodes: Application
+- Var Nodes: Variable
+The algorithm is supplied with a list of nodes, representing the 2 graphs to be evaluated connected in their roots by an indirect arc.
+At this point the algorithm will terminate if the two graphs represent the same lambda expression as it will exit failing if it detects differences.
+In the complex case it will also be evaluated under the lambda abstractions and the Crumbling Abstract Machines will be used by applying a process of crumbling the lambda terms.
