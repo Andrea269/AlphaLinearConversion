@@ -1,57 +1,53 @@
-
+//
+// Created by andrea on 13/05/19.
+//
 #include <stdio.h>
 #include <stdlib.h>
 
-/**
- * Strutture dati necessarie alla memorizzazione dei dati nei nodi del grafo
- */
+/**Strutture dati necessarie alla memorizzazione dei dati nei nodi del grafo*/
+
+struct ListNode;
 
 enum TypeNode {
     Var, App, Lam
 };
+enum Bool {
+    True, False
+};
 
-struct RelativeNode;
-
-struct IndirectEdge {
+/*********************************************************************************/
+struct NodeVar {
+    struct Node *binder;
+};
+struct NodeApp {
     struct Node *left;
     struct Node *right;
-    int isAlive;//1 se è vivo 0 altrimenti
 };
-/**
- * Il campo contenente l'arco indiretto è rappresentato in due variabili edge e edgePhysical
- * edge rappresenta il suo puntatore e vi accediamo in lettura
- * edgePhysical rappresenta l'area di memoria in cui è salvato l'arco e vi accediamo in scrittura
- * è stato necessario splittare tale informazione in 2 campi poichè abbiamo la necessità di delegare
- * a diverse funzioni l'inizializzazione, l'eventuale valorizzazione e/o modifica del campo.
- */
-struct ListIndirectEdge {
-    struct ListIndirectEdge *head;
-    struct IndirectEdge *edge;
-    struct IndirectEdge edgePhysical;
-    struct ListIndirectEdge *next;
-    int count;
+struct NodeLam {
+    struct Node *left;
+    struct Node *right;
 };
 struct Node {
-    struct RelativeNode *relativeNode;
-    struct Node *binder;
+    enum TypeNode label;
+    union {
+        struct NodeVar *var;
+        struct NodeApp *app;
+        struct NodeLam *lam;
+    } content;
     struct Node *canonic;
-    int isAlive;//1 se è vivo 0 altrimenti
-    enum TypeNode type;
-    struct ListIndirectEdge *indirectEdge;
+    struct ListNode *parentNodes;
+    struct ListNode *neighbour;
+    enum Bool building;//for print
 };
+/*********************************************************************************/
+
 struct ListNode {
     struct ListNode *head;
     struct Node *node;
     struct ListNode *next;
     int count;
 };
-struct RelativeNode {
-    struct Node *cLeft;
-    struct Node *cRight;
-    struct ListNode *parentNodes;
-};
 
-/***************************************************************************************************/
 /**
  * Inizializza l'elemento in coda alla lista passata in input
  * @param listNode puntatore alla coda della lista
@@ -61,29 +57,6 @@ void InitListNode(struct ListNode *listNode, struct ListNode *head) {
     listNode->head = head;
     listNode->node = malloc(sizeof(struct Node));
     listNode->next = malloc(sizeof(struct ListNode));
-    listNode->count = 0;
-};
-/**
- * Crea e inizializza un arco indiretto
- * @return l'arco indiretto inizializzato
- */
-struct IndirectEdge InitIndirectEdge() {
-    struct IndirectEdge indirectEdge;
-    indirectEdge.left = NULL;
-    indirectEdge.right = NULL;
-    indirectEdge.isAlive = 0;
-    return indirectEdge;
-}
-/**
- * Inizializza l'elemento in coda alla lista passata in input
- * @param listNode puntatore alla coda della lista
- * @param head della lista
- */
-void InitListIndirectEdge(struct ListIndirectEdge *listNode, struct ListIndirectEdge *head) {
-    listNode->head = head;
-    listNode->edge = malloc(sizeof(struct IndirectEdge));
-    listNode->edgePhysical = InitIndirectEdge();
-    listNode->next = malloc(sizeof(struct ListIndirectEdge));
     listNode->count = 0;
 };
 /**
@@ -98,142 +71,95 @@ struct ListNode *PushToListNode(struct ListNode *list, struct Node *prtNode) {
     list->next->count = list->count + 1;
     return list->next;
 };
-/**
- * inizializza un nodo passato in input come nodo Variabile
- * @param node puntatore del nodo da inizializzare
- */
-void InitVar(struct Node *node) {
-    node->isAlive = 1;
-    node->type = Var;
-    node->relativeNode = malloc(sizeof(struct RelativeNode));
-    node->relativeNode->parentNodes = malloc(sizeof(struct ListNode));
-    InitListNode(node->relativeNode->parentNodes, node->relativeNode->parentNodes);
-    node->binder = NULL;
-    node->canonic = NULL;
-    node->indirectEdge = malloc(sizeof(struct ListIndirectEdge));
-    InitListIndirectEdge(node->indirectEdge, node->indirectEdge);
+
+struct Node* InitVar() {
+    struct Node* node= malloc(sizeof(struct Node));
+    node->label= Var;
+    struct NodeVar* var= malloc(sizeof(struct NodeVar));
+    var->binder= NULL;
+    node->content.var= var;
+    node->canonic= NULL;
+    node->building= False;
+    node->parentNodes = malloc(sizeof(struct ListNode));
+    InitListNode(node->parentNodes, node->parentNodes);
+    node->neighbour = malloc(sizeof(struct ListNode));
+    InitListNode(node->neighbour, node->neighbour);
+    return node;
 }
 
-/**
- * inizializza un nodo passato in input come nodo Applicazione
- * @param node puntatore del nodo da inizializzare
- */
-void InitApp(struct Node *node, struct Node *left, struct Node *right) {
-    node->isAlive = 1;
-    node->type = App;
-    node->relativeNode = malloc(sizeof(struct RelativeNode));
-    node->relativeNode->cLeft = left;
-    node->relativeNode->cRight = right;
-    node->relativeNode->parentNodes = malloc(sizeof(struct ListNode));
-    InitListNode(node->relativeNode->parentNodes, node->relativeNode->parentNodes);
-    node->binder = NULL;
-    node->canonic = NULL;
-    node->indirectEdge = malloc(sizeof(struct ListIndirectEdge));
-    InitListIndirectEdge(node->indirectEdge, node->indirectEdge);
-    left->relativeNode->parentNodes = PushToListNode(left->relativeNode->parentNodes, node);
-    right->relativeNode->parentNodes = PushToListNode(right->relativeNode->parentNodes, node);
+struct Node* InitApp(struct Node *left, struct Node *right) {
+    struct Node* node= malloc(sizeof(struct Node));
+    node->label= App;
+    struct NodeApp* app= malloc(sizeof(struct NodeApp));
+    app->left= left;
+    app->right= right;
+    node->content.app= app;
+    node->canonic= NULL;
+    node->building= False;
+    node->parentNodes = malloc(sizeof(struct ListNode));
+    InitListNode(node->parentNodes, node->parentNodes);
+    node->neighbour = malloc(sizeof(struct ListNode));
+    InitListNode(node->neighbour, node->neighbour);
+    left->parentNodes = PushToListNode(left->parentNodes, node);
+    right->parentNodes = PushToListNode(right->parentNodes, node);
+    return node;
 }
 
-/**
- * inizializza un nodo passato in input come nodo Lambda Astrazione
- * @param node puntatore del nodo da inizializzare
- */
-void InitLam(struct Node *node, struct Node *left, struct Node *right) {
-    if (left->type != Var) {
+struct Node* InitLam(struct Node *left, struct Node *right) {
+    if (left->label != Var) {
         printf("Exit InitLam-> error in un nodo Lam il nodo sinistro deve essere un Var\n");
-        exit(0);
+        exit(1);
     }
-    node->isAlive = 1;
-    node->type = Lam;
-    node->relativeNode = malloc(sizeof(struct RelativeNode));
-    node->relativeNode->cLeft = left;
-    node->relativeNode->cRight = right;
-    node->relativeNode->parentNodes = malloc(sizeof(struct ListNode));
-    InitListNode(node->relativeNode->parentNodes, node->relativeNode->parentNodes);
-    node->binder = NULL;
-    node->canonic = NULL;
-    node->indirectEdge = malloc(sizeof(struct ListIndirectEdge));
-    InitListIndirectEdge(node->indirectEdge, node->indirectEdge);
-    left->binder = node;
-    left->relativeNode->parentNodes = PushToListNode(left->relativeNode->parentNodes, node);
-    right->relativeNode->parentNodes = PushToListNode(right->relativeNode->parentNodes, node);
+    struct Node* node= malloc(sizeof(struct Node));
+    node->label= Lam;
+    struct NodeLam* lam= malloc(sizeof(struct NodeLam));
+    lam->left= left;
+    lam->right= right;
+    node->content.lam= lam;
+    node->canonic= NULL;
+    node->building= False;
+    node->parentNodes = malloc(sizeof(struct ListNode));
+    InitListNode(node->parentNodes, node->parentNodes);
+    node->neighbour = malloc(sizeof(struct ListNode));
+    InitListNode(node->neighbour, node->neighbour);
+    left->content.var->binder = node;
+    left->parentNodes = PushToListNode(left->parentNodes, node);
+    right->parentNodes = PushToListNode(right->parentNodes, node);
+    return node;
 }
 
 /********************************************************************************************************/
-/**
- * valorizza l'elemento in coda alla lista e inizializza la nuova coda della lista
- * @param list è il puntatore alla coda di una lista di tipo ListIndirectEdge
- * @param left Nodo left dell'arco indiretto
- * @param right Nodo right dell'arco indiretto
- * @return  il puntatore alla nuova coda della lista
- */
-struct ListIndirectEdge *PushToListIndirectEdge(struct ListIndirectEdge *list, struct Node *left, struct Node *right) {
-    list->edgePhysical.isAlive = 1;
-    list->edgePhysical.left = left;
-    list->edgePhysical.right = right;
-    list->edge = &list->edgePhysical;
-    InitListIndirectEdge(list->next, list->head);
-    list->next->count = list->count + 1;
-    return list->next;
-};
 
-/**
- * Crea l'arco indiretto fra due nodi
- * @param left puntatore al nodo left da collegare con right
- * @param right puntatore al nodo right da collegare con left
- */
-void CreateIndirectEdge(struct Node *left, struct Node *right) {
-    left->indirectEdge = PushToListIndirectEdge(left->indirectEdge, left, right);
-    right->indirectEdge = PushToListIndirectEdge(right->indirectEdge, left, right);
-}
-/**
- * Ricerca l'altro capo di un arco indiretto
- * @param indirectEdge puntatore all'arco indiretto in cui ricercare
- * @param source putatore a una delle due estremità dell'arco indiretto
- * @return il puntatore al nodo all'altro capo dell'arco o NULL se non trova il source nell'indirectEdge
- */
-struct Node *FindOtherEndEdge(struct IndirectEdge *indirectEdge, struct Node *source) {
-    if (source == indirectEdge->left)
-        return indirectEdge->right;
-    else if (source == indirectEdge->right)
-        return indirectEdge->left;
-    return NULL;//"Error! Impossible to find the target";
-}
 /**
  * Funzione utilizzata a scopo di test
  * stampa una lista di nodi specificando il tipo dei nodi ed eventualmente il tipo dei figli
  * nel caso Lam anche il tipo del binder del figlio sinistro
  * @param listNode
- */
+
+*/
 void PrintListNode(struct ListNode *listNode) {
     printf("PrintListNode\n");
-    printf("Numero nodi %d\n", listNode->count);
+    int count =listNode->count;
+    printf("Numero nodi %d\n", count);
     struct ListNode *nodes = listNode->head;
-    while (nodes->node->isAlive != 0) {
-
+    for (int i = 0; i < count; ++i) {
         printf("PrintListNode - Nodes\n");
-        enum TypeNode x = nodes->node->type;
-        if (nodes->node->type == Var)
-            printf("VarNode -Type Var\n");
-        if (nodes->node->type == App) {
-            printf("AppNode -Type App\n");
-            if (nodes->node->relativeNode->cRight->isAlive == 1)
-                printf("CRight -Type %d\n", nodes->node->relativeNode->cRight->type);
-            if (nodes->node->relativeNode->cLeft->isAlive == 1)
-                printf("CLeft -Type %d\n", nodes->node->relativeNode->cLeft->type);
-        }
-        if (nodes->node->type == Lam) {
-            printf("LamNode -Type Lam\n");
-            if (nodes->node->relativeNode->cRight->isAlive == 1)
-                printf("CRight -Type %d\n", nodes->node->relativeNode->cRight->type);
-            if (nodes->node->relativeNode->cLeft->isAlive == 1) {
-                printf("CLeft -Type %d\n", nodes->node->relativeNode->cLeft->type);
-                struct Node *temp = nodes->node->relativeNode->cLeft->binder;
-
-                if (temp->isAlive == 1)
-                    printf("binder -Type %d\n", temp->type);
-            }
-            printf("\n\n");
+        switch (nodes->node->label){
+            case Var:
+                printf("VarNode -Type Var\n");
+                break;
+            case App:
+                printf("AppNode -Type App\n");
+                printf("CRight -Type %d\n", nodes->node->content.app->right->label);
+                printf("CLeft -Type %d\n", nodes->node->content.app->left->label);
+                break;
+            case Lam:
+                printf("LamNode -Type Lam\n");
+                printf("CRight -Type %d\n", nodes->node->content.lam->right->label);
+                printf("CLeft -Type %d\n", nodes->node->content.lam->left->label);
+                struct Node *temp = nodes->node->content.lam->left->content.var->binder;
+                printf("binder -Type %d\n", temp->label);
+                printf("\n\n");
         }
         nodes = nodes->next;
     }
@@ -241,24 +167,6 @@ void PrintListNode(struct ListNode *listNode) {
 
 
 /***************************************************************************************************/
-/**
- * inserisce un nodo nella queue se rispetta delle condizioni
- * @param queue lista in cui appendere il nodo
- * @param d nodo sotto analisi dalla procedura chiamante
- * @param t nodo da analizzare e pushare nella queue
- * @param edge da killare se la procedura và a buon fine
- * @return a nuova coda della queue
- */
-struct ListNode *Push(struct ListNode *queue, struct Node *d, struct Node *t, struct IndirectEdge *edge) {
-    if (t->canonic == NULL) {
-        t->canonic = d;
-    } else if (t->canonic != d) {
-        printf("Exit ramo Push->t.canonic != d \n");
-        exit(0);//error
-    }
-    edge->isAlive = 0;
-    return PushToListNode(queue, t);
-}
 
 /**
  * mette a confronto i 2 nodi passati in input ed esegue delle procedure ad hoc
@@ -267,109 +175,95 @@ struct ListNode *Push(struct ListNode *queue, struct Node *d, struct Node *t, st
  * @param d puntatore ad un nodo il quale deve essere messo a confronto con h
  * @param h puntatore ad un nodo il quale deve essere messo a confronto con d
  */
-void Propagate(struct Node *d, struct Node *h) {
-    if (d->type == Var && h->type == Var) {
-        if (d->binder == NULL || h->binder == NULL) {
-            if (d!=h){//confronto i puntatori per vedere se d e h puntano allo stesso nodo
-                printf("Exit ramo Propagate->d->binder == NULL || h->binder == NULL\n");
-                exit(0);
+struct ListNode* EnqueueAndPropagate(struct Node *m, struct Node *c, struct ListNode *queue ) {
+    switch ( m->label){
+        case Var:
+            if(c->label==Var){
+                if(m!=c && (m->content.var->binder ==NULL || m->content.var->binder!=c->content.var->binder))
+                    exit(1);
+            } else
+                exit(1);
+            break;
+        case App:
+            if(c->label==App) {
+                m->content.app->left->parentNodes = PushToListNode(m->content.app->left->parentNodes, c->content.app->left);
+                m->content.app->right->parentNodes = PushToListNode(m->content.app->right->parentNodes, c->content.app->right);
+                c->content.app->left->parentNodes = PushToListNode(c->content.app->left->parentNodes, m->content.app->left);
+                c->content.app->right->parentNodes = PushToListNode(c->content.app->right->parentNodes, m->content.app->right);
             }
-        } else if (d->binder->canonic != h->binder->canonic) {
-            printf("Exit ramo Propagate->d->binder->canonic!=h->binder->canonic\n");
-            exit(0);//different canonic
-        }
-    } else {
-        // il controllo che siano effettiavamente dello stesso tipo-nodo viene fatto nella procedura Kill
-        printf("CreateIndirectEdge ramo Propagate \n");
-        CreateIndirectEdge(d->relativeNode->cLeft, h->relativeNode->cLeft);
-        CreateIndirectEdge(d->relativeNode->cRight, h->relativeNode->cRight);
+            else
+                exit(1);
+            break;
+        case Lam:
+            if(c->label==Lam){
+                m->parentNodes = PushToListNode(m->parentNodes, c);
+                c->parentNodes = PushToListNode(c->parentNodes, m);
+            }else
+                exit(1);
+            break;
+        default:
+            exit(1);
     }
-    h->isAlive = 0;
+    m->canonic=c;
+    PushToListNode(queue, m);
 }
 
 /**
  * fornito un nodo in input la funzione si richiama ricorsivamente sui genitori del nodo ed elabora gli archi indiretti
- * @param d
+ * @param c
  */
-void Kill(struct Node *d) {
-    printf("Kill Node Test, %d\n", d->type);
+void BuildEquivalenceClass(struct Node *c) {
+    printf("Kill Node Test, %d\n", c->label);
+    c->canonic = c;
+    c->building= True;
     struct ListNode *queue = malloc(sizeof(struct ListNode));
     InitListNode(queue, queue);
+    queue = PushToListNode(queue, c);
 
-    if (d->canonic == NULL)
-        d->canonic = d;
-    else {
-        printf("Exit ramo Kill->d->canonic == NULL---- Else\n");
-        exit(0);//erroe
-    }
-
-    if (d->relativeNode->parentNodes != NULL) {
-        struct ListNode *parents = d->relativeNode->parentNodes->head;
-        for (int i = 0; i < d->relativeNode->parentNodes->count; ++i) {
-            if (parents->node->isAlive != 0)
-                Kill(parents->node);
-            parents = parents->next;
-        }
-    }
-
-    if (d->indirectEdge != NULL) {
-        struct ListIndirectEdge *indirectEdges = d->indirectEdge->head;
-        for (int i = 0; i < d->indirectEdge->count; ++i) {
-            if (indirectEdges->edge->isAlive != 0) {
-                struct Node *t = FindOtherEndEdge(indirectEdges->edge, d);
-                queue = Push(queue, d, t, indirectEdges->edge);
-            }
-            indirectEdges = indirectEdges->next;
-        }
-    }
-
-    struct ListNode iterQueue = *queue->head;
-    int count = 0;
-    while (count < queue->count) {
-        struct Node *h = iterQueue.node;
-        if (d->type != h->type) {
-            printf("Exit ramo Kill-> d->type != h.type\n");
-            exit(0);
-        }
-        if (h->relativeNode->parentNodes != NULL) {
-            struct ListNode *parentsH = h->relativeNode->parentNodes->head;
-            for (int i = 0; i < h->relativeNode->parentNodes->count; ++i) {
-                if (parentsH->node->isAlive != 0)
-                    Kill(parentsH->node);
-                parentsH = parentsH->next;
+    struct ListNode *headQueue = queue->head;
+    int count=0;
+    while (queue->count<count) {
+        struct Node* n= headQueue->node;
+        if (n->parentNodes != NULL) {
+            struct ListNode *parents = n->parentNodes->head;
+            for (int i = 0; i < n->parentNodes->count; ++i) {
+                if (parents->node->canonic == NULL)
+                    BuildEquivalenceClass(parents->node);
+                else if (parents->node->canonic->building==True)
+                    exit(1);
+                parents = parents->next;
             }
         }
-        if (h->indirectEdge != NULL) {
-            struct ListIndirectEdge *indirectEdgesH = h->indirectEdge->head;
-            for (int i = 0; i < h->indirectEdge->count; ++i) {
-                if (indirectEdgesH->edge->isAlive != 0) {
-                    struct Node *f = FindOtherEndEdge(indirectEdgesH->edge, d);
-                    queue = Push(queue, d, f, indirectEdgesH->edge);
-                }
-                indirectEdgesH = indirectEdgesH->next;
+        if (n->neighbour != NULL) {
+            struct ListNode *neighbour = n->neighbour->head;
+            for (int i = 0; i < n->neighbour->count; ++i) {
+                //todo compare c ma forse è n controllare
+                if (neighbour->node->canonic == NULL)
+                    queue=  EnqueueAndPropagate(neighbour->node, c, queue);
+                else if (neighbour->node->canonic!= c)
+                    exit(1);
+                neighbour = neighbour->next;
             }
         }
-
-        Propagate(d, h);
-        iterQueue = *iterQueue.next;
         count++;
+        headQueue = headQueue->next;// queue(c).pop()
     }
-    d->isAlive = 0;
+    c->building= False;
 }
 
 /**
  * procedura che visita tutti i nodi di una lista (se sono vivi) e li uccide tramite la procedura Kill
  * @param listNode lista di nodi da visitare
- */
-void BlindSharingCheck(struct ListNode *listNode) {
+
+*/
+void DAGCheck(struct ListNode *listNode) {
     struct ListNode *nodes = listNode->head;
     for (int i = 0; i < listNode->count; ++i) {
-        if (nodes->node->isAlive != 0)
-            Kill(nodes->node);
+        if (nodes->node->canonic == NULL)
+            BuildEquivalenceClass(nodes->node);
         nodes = nodes->next;
     }
 }
-
 
 /***************************************************************************************************/
 int main() {
@@ -377,40 +271,30 @@ int main() {
     struct ListNode *nodes = malloc(sizeof(struct ListNode));
     InitListNode(nodes, nodes);
 
-    struct Node node1Var;
-    InitVar(&node1Var);
-    struct Node node2Var;
-    InitVar(&node2Var);
-    struct Node node1App;
-    InitApp(&node1App, &node1Var, &node2Var);
-    struct Node node3Var;
-    InitVar(&node3Var);
-    struct Node node1Lam;
-    InitLam(&node1Lam, &node3Var, &node1App);
+    struct Node* node1Var=InitVar();
+    struct Node* node2Var=InitVar();
+    struct Node* node1App=InitApp(node1Var, node2Var);
+    struct Node* node3Var=InitVar();
+    struct Node* node1Lam=InitLam(node3Var, node1App);
 
-    nodes = PushToListNode(nodes, &node1Var);
-    nodes = PushToListNode(nodes, &node2Var);
-    nodes = PushToListNode(nodes, &node1App);
-    nodes = PushToListNode(nodes, &node3Var);
-    nodes = PushToListNode(nodes, &node1Lam);
+    nodes = PushToListNode(nodes, node1Var);
+    nodes = PushToListNode(nodes, node2Var);
+    nodes = PushToListNode(nodes, node1App);
+    nodes = PushToListNode(nodes, node3Var);
+    nodes = PushToListNode(nodes, node1Lam);
 
-    struct Node node11App;
-    InitApp(&node11App, &node1Var, &node2Var);
-    struct Node node31Var;
-    InitVar(&node31Var);
-    struct Node node11Lam;
-    InitLam(&node11Lam, &node31Var, &node11App);
+    struct Node* node11App=InitApp(node1Var, node2Var);
+    struct Node* node31Var=InitVar();
+    struct Node* node11Lam=InitLam(node31Var, node11App);
 
-    nodes = PushToListNode(nodes, &node11App);
-    nodes = PushToListNode(nodes, &node31Var);
-    nodes = PushToListNode(nodes, &node11Lam);
-
-    CreateIndirectEdge(&node1Lam, &node11Lam);//creo un arco indiretto fra le 2 root dei grafi da confrontare
+    nodes = PushToListNode(nodes, node11App);
+    nodes = PushToListNode(nodes, node31Var);
+    nodes = PushToListNode(nodes, node11Lam);
 
     PrintListNode(nodes);
     printf("\nStart Test PARTE2\n\n");
 
-    BlindSharingCheck(nodes);
+    DAGCheck(nodes);
 
     printf("END, World!\n");
     return 0;
