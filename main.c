@@ -142,6 +142,21 @@ void PrintListNode(struct ListNode *listNode) {
     int count =listNode->count;
     printf("Numero nodi %d\n", count);
     struct ListNode *nodes = listNode->head;
+    printf("PrintListNode - Nodes\n");
+    for (int i = 0; i < count; ++i) {
+        switch (nodes->node->label){
+            case Var:
+                printf("0\n");
+                break;
+            case App:
+                printf("1\n");
+                break;
+            case Lam:
+                printf("2\n");
+        }
+        nodes = nodes->next;
+    }
+    nodes = listNode->head;
     for (int i = 0; i < count; ++i) {
         printf("PrintListNode - Nodes\n");
         switch (nodes->node->label){
@@ -186,18 +201,18 @@ struct ListNode* EnqueueAndPropagate(struct Node *m, struct Node *c, struct List
             break;
         case App:
             if(c->label==App) {
-                m->content.app->left->parentNodes = PushToListNode(m->content.app->left->parentNodes, c->content.app->left);
-                m->content.app->right->parentNodes = PushToListNode(m->content.app->right->parentNodes, c->content.app->right);
-                c->content.app->left->parentNodes = PushToListNode(c->content.app->left->parentNodes, m->content.app->left);
-                c->content.app->right->parentNodes = PushToListNode(c->content.app->right->parentNodes, m->content.app->right);
+                m->content.app->left->neighbour = PushToListNode(m->content.app->left->neighbour, c->content.app->left);
+                m->content.app->right->neighbour = PushToListNode(m->content.app->right->neighbour, c->content.app->right);
+                c->content.app->left->neighbour = PushToListNode(c->content.app->left->neighbour, m->content.app->left);
+                c->content.app->right->neighbour = PushToListNode(c->content.app->right->neighbour, m->content.app->right);
             }
             else
                 exit(1);
             break;
         case Lam:
             if(c->label==Lam){
-                m->parentNodes = PushToListNode(m->parentNodes, c);
-                c->parentNodes = PushToListNode(c->parentNodes, m);
+                m->neighbour = PushToListNode(m->neighbour, c);
+                c->neighbour = PushToListNode(c->neighbour, m);
             }else
                 exit(1);
             break;
@@ -222,7 +237,7 @@ void BuildEquivalenceClass(struct Node *c) {
 
     struct ListNode *headQueue = queue->head;
     int count=0;
-    while (queue->count<count) {
+    while (queue->count>count) {
         struct Node* n= headQueue->node;
         if (n->parentNodes != NULL) {
             struct ListNode *parents = n->parentNodes->head;
