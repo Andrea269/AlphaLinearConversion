@@ -17,14 +17,14 @@ enum Bool {
 
 /*********************************************************************************/
 struct NodeVar {
-    struct Node *binder;
+    struct Node *binder;//NodeLam
 };
 struct NodeApp {
     struct Node *left;
     struct Node *right;
 };
 struct NodeLam {
-    struct Node *left;
+    struct Node *left;//NodeVar
     struct Node *right;
 };
 struct Node {
@@ -37,7 +37,7 @@ struct Node {
     struct Node *canonic;
     struct ListNode *parentNodes;
     struct ListNode *neighbour;
-    enum Bool building;//for print
+    enum Bool building;
 };
 /*********************************************************************************/
 
@@ -142,21 +142,21 @@ void PrintListNode(struct ListNode *listNode) {
     int count =listNode->count;
     printf("Numero nodi %d\n", count);
     struct ListNode *nodes = listNode->head;
-    printf("PrintListNode - Nodes\n");
-    for (int i = 0; i < count; ++i) {
-        switch (nodes->node->label){
-            case Var:
-                printf("0\n");
-                break;
-            case App:
-                printf("1\n");
-                break;
-            case Lam:
-                printf("2\n");
-        }
-        nodes = nodes->next;
-    }
-    nodes = listNode->head;
+//    printf("PrintListNode - Nodes\n");
+//    for (int i = 0; i < count; ++i) {
+//        switch (nodes->node->label){
+//            case Var:
+//                printf("0\n");
+//                break;
+//            case App:
+//                printf("1\n");
+//                break;
+//            case Lam:
+//                printf("2\n");
+//        }
+//        nodes = nodes->next;
+//    }
+//    nodes = listNode->head;
     for (int i = 0; i < count; ++i) {
         printf("PrintListNode - Nodes\n");
         switch (nodes->node->label){
@@ -187,8 +187,9 @@ void PrintListNode(struct ListNode *listNode) {
  * mette a confronto i 2 nodi passati in input ed esegue delle procedure ad hoc
  * tali procedure determinano se l'algoritmo termina fallendo
  * oppure creano gli archi indiretti necessari per il confronto dei nodi figli
- * @param d puntatore ad un nodo il quale deve essere messo a confronto con h
- * @param h puntatore ad un nodo il quale deve essere messo a confronto con d
+ * @param m puntatore ad un nodo il quale deve essere messo a confronto con c
+ * @param c puntatore ad un nodo il quale deve essere messo a confronto con m
+ * @param queue del nodo m
  */
 struct ListNode* EnqueueAndPropagate(struct Node *m, struct Node *c, struct ListNode *queue ) {
     switch ( m->label){
@@ -228,7 +229,7 @@ struct ListNode* EnqueueAndPropagate(struct Node *m, struct Node *c, struct List
  * @param c
  */
 void BuildEquivalenceClass(struct Node *c) {
-    printf("Kill Node Test, %d\n", c->label);
+    printf("BuildEquivalenceClass Node, Label= %d\n", c->label);
     c->canonic = c;
     c->building= True;
     struct ListNode *queue = malloc(sizeof(struct ListNode));
@@ -252,7 +253,6 @@ void BuildEquivalenceClass(struct Node *c) {
         if (n->neighbour != NULL) {
             struct ListNode *neighbour = n->neighbour->head;
             for (int i = 0; i < n->neighbour->count; ++i) {
-                //todo compare c ma forse è n controllare
                 if (neighbour->node->canonic == NULL)
                     queue=  EnqueueAndPropagate(neighbour->node, c, queue);
                 else if (neighbour->node->canonic!= c)
@@ -267,9 +267,9 @@ void BuildEquivalenceClass(struct Node *c) {
 }
 
 /**
- * procedura che visita tutti i nodi di una lista (se sono vivi) e li uccide tramite la procedura Kill
+ * procedura che scorre tutti i nodi di una lista e
+ * se hanno il canonic settato a NULL li visita tramite la procedura BuildEquivalenceClass
  * @param listNode lista di nodi da visitare
-
 */
 void DAGCheck(struct ListNode *listNode) {
     struct ListNode *nodes = listNode->head;
@@ -281,6 +281,10 @@ void DAGCheck(struct ListNode *listNode) {
 }
 
 /***************************************************************************************************/
+/**
+ * Test
+ * @return 0 or error
+ */
 int main() {
     printf("Start Test\n");
     struct ListNode *nodes = malloc(sizeof(struct ListNode));
