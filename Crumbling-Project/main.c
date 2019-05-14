@@ -30,6 +30,7 @@ struct Crumblep {
     struct Term *term;
     struct Env *env;
 };
+
 /*********************************************************************************/
 struct NodeVar {
     struct Var *var;
