@@ -213,10 +213,8 @@ struct ListNode* EnqueueAndPropagate(struct Node *m, struct Node *c, struct List
                 exit(1);
             break;
         case Lam:
-            if(c->label==Lam)
-//                PushNeighbour(m, c);
-            {
-                PushNeighbour(m->content.lam->left, c->content.lam->left);
+            if(c->label==Lam){
+//                PushNeighbour(m->content.lam->left, c->content.lam->left);
                 PushNeighbour(m->content.lam->right, c->content.lam->right);
             }else
                 exit(1);
@@ -307,11 +305,11 @@ int main() {
     nodes = PushToListNode(nodes, node1Lam);
 
     struct Node* node11App=InitApp(node1Var, node2Var);
-    struct Node* node31Var=InitVar();
-    struct Node* node11Lam=InitLam(node31Var, node11App);
+//    struct Node* node31Var=InitVar();
+    struct Node* node11Lam=InitLam(node3Var, node11App);
 
     nodes = PushToListNode(nodes, node11App);
-    nodes = PushToListNode(nodes, node31Var);
+//    nodes = PushToListNode(nodes, node31Var);
     nodes = PushToListNode(nodes, node11Lam);
 
     PrintListNode(nodes);
