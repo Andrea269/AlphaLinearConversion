@@ -182,6 +182,10 @@ void PrintListNode(struct ListNode *listNode) {
 
 
 /***************************************************************************************************/
+void PushNeighbour(struct Node *m, struct Node *c){
+    m->neighbour=PushToListNode(m->neighbour, c);
+    c->neighbour=PushToListNode(c->neighbour, m);
+}
 
 /**
  * mette a confronto i 2 nodi passati in input ed esegue delle procedure ad hoc
@@ -195,25 +199,25 @@ struct ListNode* EnqueueAndPropagate(struct Node *m, struct Node *c, struct List
     switch ( m->label){
         case Var:
             if(c->label==Var){
-                if(m!=c && (m->content.var->binder ==NULL || m->content.var->binder!=c->content.var->binder))
-                    exit(1);
+                if(m!=c && (m->content.var->binder ==NULL || c->content.var->binder ==NULL ||
+                            m->content.var->binder->canonic!=c->content.var->binder->canonic))
+                    exit(3);
             } else
                 exit(1);
             break;
         case App:
             if(c->label==App) {
-                m->content.app->left->neighbour = PushToListNode(m->content.app->left->neighbour, c->content.app->left);
-                m->content.app->right->neighbour = PushToListNode(m->content.app->right->neighbour, c->content.app->right);
-                c->content.app->left->neighbour = PushToListNode(c->content.app->left->neighbour, m->content.app->left);
-                c->content.app->right->neighbour = PushToListNode(c->content.app->right->neighbour, m->content.app->right);
-            }
-            else
+                PushNeighbour(m->content.app->left, c->content.app->left);
+                PushNeighbour(m->content.app->right, c->content.app->right);
+            }else
                 exit(1);
             break;
         case Lam:
-            if(c->label==Lam){
-                m->neighbour = PushToListNode(m->neighbour, c);
-                c->neighbour = PushToListNode(c->neighbour, m);
+            if(c->label==Lam)
+//                PushNeighbour(m, c);
+            {
+                PushNeighbour(m->content.lam->left, c->content.lam->left);
+                PushNeighbour(m->content.lam->right, c->content.lam->right);
             }else
                 exit(1);
             break;
@@ -246,7 +250,7 @@ void BuildEquivalenceClass(struct Node *c) {
                 if (parents->node->canonic == NULL)
                     BuildEquivalenceClass(parents->node);
                 else if (parents->node->canonic->building==True)
-                    exit(1);
+                    exit(2);
                 parents = parents->next;
             }
         }
@@ -256,7 +260,7 @@ void BuildEquivalenceClass(struct Node *c) {
                 if (neighbour->node->canonic == NULL)
                     queue=  EnqueueAndPropagate(neighbour->node, c, queue);
                 else if (neighbour->node->canonic!= c)
-                    exit(1);
+                    exit(2);
                 neighbour = neighbour->next;
             }
         }
@@ -313,6 +317,7 @@ int main() {
     PrintListNode(nodes);
     printf("\nStart Test PARTE2\n\n");
 
+    PushNeighbour(node1Lam, node11Lam);
     DAGCheck(nodes);
 
     printf("END, World!\n");
