@@ -93,6 +93,7 @@ struct List {
  */
 void InitList(struct List *listNode, struct List *head) {
     listNode->head = head;
+
     listNode->element = malloc(sizeof(struct ElementList));
     listNode->next = malloc(sizeof(struct List));
     listNode->count = 0;
