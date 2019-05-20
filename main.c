@@ -21,7 +21,7 @@ struct NodeVar {
     struct Node *binder;//NodeLam
 };
 struct NodeShared {
-    struct Node *body;//NodeVar
+    struct Node *body;
 };
 struct NodeApp {
     struct Node *left;
@@ -188,6 +188,7 @@ struct Node *Subst(struct Node *src, struct Node *dst, struct Node *l, struct No
 }
 
 void Eval(struct Node *n) {
+    printf("Eval Node, Label= %d\n", n->label);
     if (n->iswnf == True)
         return;
     switch (n->label) {
@@ -294,7 +295,7 @@ void BuildClass(struct Node *c) {
                 iterNeighbour = iterNeighbour->next;
             }
             struct ListElement *iterParents = n->parentNodes->head;
-            for (int i = 0; i < n->neighbour->count; ++i) {//itero sui padri di n e se il padre è shared valuto
+            for (int i = 0; i < n->parentNodes->count; ++i) {//itero sui padri di n e se il padre è shared valuto
                 if(iterParents->node->label==Shared){
                     if (iterParents->node->canonic == NULL)
                         Enqueue(iterParents->node, c);
