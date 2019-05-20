@@ -34,10 +34,10 @@ struct NodeLam {
 struct Node {
     enum TypeNode label;
     union {
-        struct NodeVar *var;
-        struct NodeShared *shared;
-        struct NodeApp *app;
-        struct NodeLam *lam;
+        struct NodeVar var;
+        struct NodeShared shared;
+        struct NodeApp app;
+        struct NodeLam lam;
     } content;
     struct Node *canonic;
     struct Node *copy;
@@ -82,9 +82,7 @@ struct Node *InitVar(struct Node *binder) {
     }
     struct Node *node = malloc(sizeof(struct Node));
     node->label = Var;
-    struct NodeVar *var = malloc(sizeof(struct NodeVar));
-    var->binder = binder;
-    node->content.var = var;
+    node->content.var.binder = binder;
     node->canonic = NULL;
     node->copy = NULL;
     node->building = False;
@@ -97,9 +95,7 @@ struct Node *InitVar(struct Node *binder) {
 struct Node *InitShared(struct Node *body) {
     struct Node *node = malloc(sizeof(struct Node));
     node->label = Shared;
-    struct NodeShared *shared = malloc(sizeof(struct NodeShared));
-    shared->body= body;
-    node->content.shared = shared;
+    node->content.shared.body= body;
     node->canonic = NULL;
     node->copy = NULL;
     node->building = False;
@@ -112,10 +108,8 @@ struct Node *InitShared(struct Node *body) {
 struct Node *InitApp(struct Node *left, struct Node *right) {
     struct Node *node = malloc(sizeof(struct Node));
     node->label = App;
-    struct NodeApp *app = malloc(sizeof(struct NodeApp));
-    app->left = left;
-    app->right = right;
-    node->content.app = app;
+    node->content.app.left = left;
+    node->content.app.right = right;
     node->canonic = NULL;
     node->copy = NULL;
     node->building = False;
@@ -134,23 +128,32 @@ struct Node *InitLam(struct Node *var, struct Node *body) {
     }
     struct Node *node = malloc(sizeof(struct Node));
     node->label = Lam;
-    struct NodeLam *lam = malloc(sizeof(struct NodeLam));
-    lam->var = var;
-    lam->body = body;
-    node->content.lam = lam;
+    node->content.lam.var = var;
+    node->content.lam.body = body;
     node->canonic = NULL;
     node->copy = NULL;
     node->building = False;
     node->iswnf = False;
     node->parentNodes =InitListHT();
     node->neighbour = InitListHT();
-    var->content.var->binder = node;
+    var->content.var.binder = node;
     PushToListHT(var->parentNodes, node);
     PushToListHT(body->parentNodes, node);
     return node;
 }
 /***************************************************************************************************
  Evaluate*/
+
+struct Node *Unchain(struct Node *n) {
+    if (n->label == Shared)
+        return n;
+    else {
+        struct Node *sharedN = InitShared(n);
+        PushToListHT(n->parentNodes, sharedN);
+        return sharedN;
+    }
+}
+
 struct Node *Subst(struct Node *src, struct Node *dst, struct Node *l, struct Node *sub) {
     if (dst == NULL) {
         dst = malloc(sizeof(struct Node));
@@ -162,40 +165,27 @@ struct Node *Subst(struct Node *src, struct Node *dst, struct Node *l, struct No
             dst = src;
             break;
         case Var:
-            if (src->content.var->binder == NULL)
+            if (src->content.var.binder == NULL)
                 dst = src;
-            else if (src->content.var->binder == l)
-                dst = sub;
-            else if (src->content.var->binder->copy == NULL)
+            else if (src->content.var.binder == l)
+                dst = Unchain(sub);
+            else if (src->content.var.binder->copy == NULL)
                 dst = src;
             else
-                dst = src->content.var->binder->copy;
+                dst = src->content.var.binder->copy;
             break;
         case App:
-            dst= InitApp(Subst(src->content.app->left, NULL, l, sub), Subst(src->content.app->right, NULL, l, sub));
+            dst= InitApp(Subst(src->content.app.left, NULL, l, sub), Subst(src->content.app.right, NULL, l, sub));
             break;
         case Lam:
             src->copy=dst;
-            src->content.lam->body=Subst(src->content.lam->body, NULL, l, sub);
+            src->content.lam.body=Subst(src->content.lam.body, NULL, l, sub);
             src->copy=NULL;
             dst=src;
             break;
     }
     return dst;
 }
-
-struct Node *Unchain(struct Node *n) {
-    if (n->label == Shared)
-        return n;
-    else {
-        struct Node *sharedN = InitShared(n);
-
-        //todo sharedN dovrà copiare anche i parent e neighbour di n???
-
-        return sharedN;
-    }
-}
-
 
 void Eval(struct Node *n) {
     if (n->iswnf == True)
@@ -207,18 +197,15 @@ void Eval(struct Node *n) {
             n->iswnf = True;
             break;
         case App:
-            Eval(n->content.app->right);
-            Eval(n->content.app->left);
-            switch (n->content.app->left->label) {
+            Eval(n->content.app.right);
+            Eval(n->content.app.left);
+            switch (n->content.app.left->label) {
                 case Lam:
-                    //todo l'output di Subst và da qualche parte?
-                    Subst(n->content.app->left->content.lam->body, n, n->content.app->left,
-                          Unchain(n->content.app->right));
-                    Eval(n);//todo ma non sto già eseguendo Eval(n)???
+                    Subst(n->content.app.left->content.lam.body, n, n->content.app.left, n->content.app.right);
+                    Eval(n);
                     break;
                 case Shared:
-                    if (n->content.app->left->content.shared->body->label == Lam) {
-
+                    if (n->content.app.left->content.shared.body->label == Lam) {
                         break;
                     }
                 default:
@@ -230,7 +217,6 @@ void Eval(struct Node *n) {
 /***************************************************************************************************
  BuildEquivalenceClass*/
 void PushNeighbour(struct Node *m, struct Node *c) {
-    //todo serve creare l'arco su entrambi i nodi o basta su m
     PushToListHT(m->neighbour, c);
     PushToListHT(c->neighbour, m);
 }
@@ -246,23 +232,22 @@ void Propagate(struct Node *m, struct Node *c) {
             break;
         case Var:
             if (c->label == Var) {
-                //todo continuo a controllare che m != c o devo controllare solo il canonic???
-                if (m != c && (m->content.var->binder == NULL || c->content.var->binder == NULL ||
-                               m->content.var->binder->canonic != c->content.var->binder->canonic))
+                if (m->content.var.binder == NULL || c->content.var.binder == NULL ||
+                               m->content.var.binder->canonic != c->content.var.binder->canonic)
                     exit(3);
             } else
                 exit(3);
             break;
         case App:
             if (c->label == App) {
-                PushNeighbour(m->content.app->left, c->content.app->left);
-                PushNeighbour(m->content.app->right, c->content.app->right);
+                PushNeighbour(m->content.app.left, c->content.app.left);
+                PushNeighbour(m->content.app.right, c->content.app.right);
             } else
                 exit(3);
             break;
         case Lam:
             if (c->label == Lam)
-                PushNeighbour(m->content.lam->body, c->content.lam->body);
+                PushNeighbour(m->content.lam.body, c->content.lam.body);
             else
                 exit(3);
     }
@@ -281,7 +266,7 @@ void BuildClass(struct Node *c) {
         if (n->parentNodes != NULL) {
             struct ListElement *iterParents = n->parentNodes->head;
             for (int i = 0; i < n->parentNodes->count; ++i) {
-                if (n->label == Shared)// m=iterParents->node todo forse qui và m non n??? perchè se è n và fuori dal for
+                if (iterParents->node->label == Shared)// m=iterParents->node
                     continue;
 
                 if (iterParents->node->canonic == NULL)
@@ -307,6 +292,23 @@ void BuildClass(struct Node *c) {
                 else if (iterNeighbour->node->canonic != c)
                     exit(2);
                 iterNeighbour = iterNeighbour->next;
+            }
+            struct ListElement *iterParents = n->parentNodes->head;
+            for (int i = 0; i < n->neighbour->count; ++i) {//itero sui padri di n e se il padre è shared valuto
+                if(iterParents->node->label==Shared){
+                    if (iterParents->node->canonic == NULL)
+                        Enqueue(iterParents->node, c);
+                    else if (iterParents->node->canonic != c)
+                        exit(2);
+                    iterParents = iterParents->next;
+                }
+            }
+            if(n->label==Shared){//se n è shared valuto sul body
+                struct Node* body=n->content.shared.body;
+                if (body->canonic == NULL)
+                    Enqueue(body, c);
+                else if (body->canonic != c)
+                    exit(2);
             }
         }
         count++;
@@ -347,14 +349,14 @@ void PrintListHT() {//struct ListHT *listHT
                 break;
             case App:
                 printf("AppNode -Type App\n");
-                printf("CRight -Type %d\n", nodes->node->content.app->right->label);
-                printf("CLeft -Type %d\n", nodes->node->content.app->left->label);
+                printf("CRight -Type %d\n", nodes->node->content.app.right->label);
+                printf("CLeft -Type %d\n", nodes->node->content.app.left->label);
                 break;
             case Lam:
                 printf("LamNode -Type Lam\n");
-                printf("CRight -Type %d\n", nodes->node->content.lam->body->label);
-                printf("CLeft -Type %d\n", nodes->node->content.lam->var->label);
-                struct Node *temp = nodes->node->content.lam->var->content.var->binder;
+                printf("CRight -Type %d\n", nodes->node->content.lam.body->label);
+                printf("CLeft -Type %d\n", nodes->node->content.lam.var->label);
+                struct Node *temp = nodes->node->content.lam.var->content.var.binder;
                 printf("binder -Type %d\n", temp->label);
         }
         nodes = nodes->next;
