@@ -431,14 +431,12 @@ void Eval(struct Element *element) {//riduzione....
     }
 }
 
-
 /***************************************************************************************************
  BuildEquivalenceClass*/
 void PushNeighbour(struct Node *m, struct Node *c) {
     PushToListHT(m->neighbour, c);
     PushToListHT(c->neighbour, m);
 }
-
 void Enqueue(struct Node *n, struct Node *c) {
     n->canonic = c;
     PushToListHT(c->queue, n);
@@ -454,9 +452,13 @@ void Propagate(struct Node *m, struct Node *c) {//propagazione nodi....
             break;
         case Var:
             if (c->label == Var) {
-                if (m->content.var.binder != NULL && c->content.var.binder != NULL)
-                    if(m->content.var.binder->canonic != c->content.var.binder->canonic)
+                if (m->content.var.binder != NULL){
+                    if(c->content.var.binder == NULL || m->content.var.binder->canonic != c->content.var.binder->canonic)
                         exit(3);
+                }else{
+                    if(c->content.var.binder != NULL)
+                        exit(3);
+                }
             } else
                 exit(3);
             break;
@@ -564,7 +566,6 @@ void BuildClass(struct Node *c) {
     }
     c->building = False;
 }
-
 /***************************************************************************************************
  Main-Equivalence&Eval*/
 void DAGCheckAndEval() {//struct ListHT *listHT
@@ -577,7 +578,6 @@ void DAGCheckAndEval() {//struct ListHT *listHT
     }
     printf("END DAGCheckAndEval\n");
 }
-
 /**************************************************************************************************
  TEST*/
 void PrintListHT() {//struct ListHT *listHT
@@ -606,6 +606,13 @@ void PrintListHT() {//struct ListHT *listHT
                 printf("CLeft -Type %d\n", nodes->node->content.lam.var->label);
                 struct Node *temp = nodes->node->content.lam.var->content.var.binder;
                 printf("binder -Type %d\n", temp->label);
+                break;
+            case Match:break;
+            case Let:break;
+            case FRic:break;
+            case GCoRic:break;
+            case Constructor:break;
+            case Constant:break;
         }
         nodes = nodes->next;
     }
@@ -618,8 +625,8 @@ void initTest1() {
     struct Node *node1App = InitApp(node1Var, node2Var);
     struct Node *node3Var = InitVar(NULL);
     struct Node *node1Lam = InitLam(node3Var, node1App);
-    struct Node *node11App = InitApp(node1Var, node2Var); //test build correct
-//    struct Node *node11App = InitApp(node1Var, node3Var); //test build error
+    struct Node *node11App = InitApp(node1Var, node2Var); //test correct-> if exit 0
+//    struct Node *node11App = InitApp(node1Var, node3Var); //test correct-> if error exit 3
     struct Node *node11Lam = InitLam(node3Var, node11App);
 
     nodesHT = InitListHT();
@@ -634,7 +641,6 @@ void initTest1() {
 
     PushNeighbour(node1Lam, node11Lam);
 }
-
 void initTest2() {
 
     struct Node *node1Var = InitVar(NULL);
@@ -642,10 +648,8 @@ void initTest2() {
     struct Node *node1Lam = InitLam(node1Var, node2Var);
     struct Node *node1App = InitApp(node1Lam, node2Var);//figlio dex body lam
 
-
     struct Node *node2Lam = InitLam(node1Var, node2Var);
     struct Node *node2App = InitApp(node2Lam, node2Var);
-
 
     nodesHT = InitListHT();
     PushToListHT(nodesHT, node1Var);
@@ -658,7 +662,6 @@ void initTest2() {
 
     PushNeighbour(node1App, node2App);
 }
-
 void initTestMatch() {
     struct NodeType *type = malloc(sizeof(struct NodeType));
 
@@ -682,12 +685,11 @@ void initTestMatch() {
     PushToListHT(branches, node2App);
     PushToListHT(branches, node3App);
 
-
     struct ListHT *branches2 = InitListHT();
     struct Node *node1Lam2 = InitLam(node1Var, node2Var);
-    struct Node *node1App2 = InitApp(node1Lam, node2Var);
+    struct Node *node1App2 = InitApp(node1Lam2, node2Var);
     struct Node *node2App2 = InitApp(node1Var, node2Var);
-    struct Node *node3App2 = InitApp(node1Lam, node3Var);
+    struct Node *node3App2 = InitApp(node1Lam2, node3Var);
     PushToListHT(branches2, node1App2);
     PushToListHT(branches2, node2App2);
     PushToListHT(branches2, node3App2);
@@ -733,8 +735,6 @@ void initTestMatch() {
 //    PushNeighbour(nodeMatchGcoric, nodeMatchConst2);
 }
 
-
-
 /**
  * @return  0-> Successfully completed
  *          1-> ERROR: Exit in InitNode
@@ -744,9 +744,9 @@ void initTestMatch() {
 int main() {
     printf("START Test\n\n");
 
-    initTest1();
+//    initTest1();
 //    initTest2();
-//    initTestMatch(); // exit 3-> if (n->label == Shared) {//se n è shared valuto sul body
+    initTestMatch(); // exit 3-> if (n->label == Shared) {//se n è shared valuto sul body
 
 
     PrintListHT();
