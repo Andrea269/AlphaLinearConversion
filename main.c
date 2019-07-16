@@ -454,9 +454,9 @@ void Propagate(struct Node *m, struct Node *c) {//propagazione nodi....
             break;
         case Var:
             if (c->label == Var) {
-                if (m->content.var.binder == NULL || c->content.var.binder == NULL ||
-                    m->content.var.binder->canonic != c->content.var.binder->canonic)
-                    exit(3);
+                if (m->content.var.binder != NULL && c->content.var.binder != NULL)
+                    if(m->content.var.binder->canonic != c->content.var.binder->canonic)
+                        exit(3);
             } else
                 exit(3);
             break;
@@ -744,9 +744,9 @@ void initTestMatch() {
 int main() {
     printf("START Test\n\n");
 
-//    initTest1();
+    initTest1();
 //    initTest2();
-    initTestMatch(); // exit 3-> if (n->label == Shared) {//se n è shared valuto sul body
+//    initTestMatch(); // exit 3-> if (n->label == Shared) {//se n è shared valuto sul body
 
 
     PrintListHT();
