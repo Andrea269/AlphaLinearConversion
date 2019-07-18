@@ -194,6 +194,7 @@ void TestLet() {
 void TestFunRicJTHConstructor() {
     printf("START TestLet\n\n");
     nodesHT = InitListHT();
+    struct Node *node1Var = PushToNodes(InitFVar(NULL));
 
     struct Node *var = PushToNodes(InitBVar(NULL));
     struct ListHT *arg = InitListHT();
@@ -204,10 +205,10 @@ void TestFunRicJTHConstructor() {
     PushToListHT(arg, node12Var);
     PushToListHT(arg, node13Var);
     struct ListHT *argF = InitListHT();
-    struct Node *node1Var = PushToNodes(InitFVar(NULL));
+    struct Node *node0Var = PushToNodes(InitFVar(NULL));
     struct Node *node2Var = PushToNodes(InitFVar(NULL));
     struct Node *nodeConstructor = PushToNodes(InitConstructor(3, arg));
-    PushToListHT(argF, node1Var);
+    PushToListHT(argF, node0Var);
     PushToListHT(argF, node2Var);
     PushToListHT(argF, nodeConstructor);
     struct Node *f = PushToNodes(InitApp(node1Var, node1Var));
@@ -272,6 +273,55 @@ void TestFunRicNoJTHConstructor() {
     DAGCheckAndEval(nodesHT);
     printf("END ------\n\n");
 }
+
+void TestFunRicError() {
+    printf("START TestFunRicError\n\n");
+    nodesHT = InitListHT();
+    struct Node *node1Var = PushToNodes(InitFVar(NULL));;
+    struct Node *nodeBVar = PushToNodes(InitBVar(NULL));
+
+    struct Node *var = PushToNodes(InitBVar(NULL));
+    struct ListHT *arg = InitListHT();
+    struct Node *node11Var = PushToNodes(InitFVar(NULL));
+    struct Node *node12Var = PushToNodes(InitFVar(NULL));
+    struct Node *node13Var = PushToNodes(InitFVar(NULL));
+    PushToListHT(arg, node11Var);
+    PushToListHT(arg, node12Var);
+    PushToListHT(arg, node13Var);
+    struct ListHT *argF = InitListHT();
+    struct Node *node0Var = PushToNodes(InitFVar(NULL));
+    struct Node *node2Var = PushToNodes(InitFVar(NULL));
+    struct Node *nodeConstructor = PushToNodes(InitConstructor(3, arg));
+    PushToListHT(argF, node0Var);
+    PushToListHT(argF, node2Var);
+    PushToListHT(argF, nodeConstructor);
+    struct Node *f = PushToNodes(InitApp(node1Var, node1Var));
+    struct Node *nodeFunRic = PushToNodes(InitFRic(var, f, 3, argF));
+
+    struct ListHT *arg2 = InitListHT();
+    struct Node *node112Var = PushToNodes(InitFVar(NULL));
+    struct Node *node122Var = PushToNodes(InitFVar(NULL));
+    struct Node *node132Var = PushToNodes(InitFVar(NULL));
+    PushToListHT(arg2, node112Var);
+    PushToListHT(arg2, node122Var);
+    PushToListHT(arg2, node132Var);
+    struct ListHT *argF2 = InitListHT();
+    struct Node *node212Var = PushToNodes(InitFVar(NULL));
+    struct Node *node222Var = PushToNodes(InitFVar(NULL));
+    struct Node *nodeConstructor2 = PushToNodes(InitConstructor(3, arg2));
+    PushToListHT(argF2, node212Var);
+    PushToListHT(argF2, node222Var);
+    PushToListHT(argF2, nodeConstructor2);
+    struct Node *f2 = PushToNodes(InitLam(nodeBVar, node1Var));
+    struct Node *nodeFunRic2 = PushToNodes(InitFRic(var, f2, 3, argF2));
+
+
+    struct Node *r1=WeakCbVEval(nodeFunRic);
+    struct Node *r2=WeakCbVEval(nodeFunRic2);
+    PushNeighbour(r1, r2);
+    DAGCheckAndEval(nodesHT);
+    printf("END ------\n\n");
+}
 /***********************************---MAIN-TEST---***********************************
  * @return  0-> Successfully completed
  *          1-> ERROR: Exit in InitNode
@@ -281,15 +331,16 @@ void TestFunRicNoJTHConstructor() {
 int main() {
     printf("START MAIN\n\n");
 
-//    TestAppCorrect();
-//    TestMatchConstructor();
-//    TestMatchCoRic();
-//    TestLet();
-//    TestFunRicJTHConstructor();
+    //Test sottostanti devono terminare con la fine del programma e non con errore
+    TestAppCorrect();
+    TestMatchConstructor();
+    TestMatchCoRic();
+    TestLet();
+    TestFunRicJTHConstructor();
     TestFunRicNoJTHConstructor();
 
-
-
+    //Test sottostanti è giusto che terminano con un errore, sarebbe errato altrimenti
+//    TestFunRicError();
 //    TestAppError();
 //    TestMatchError();
     printf("\nEND MAIN\n");
@@ -306,7 +357,8 @@ int main() {
 //    DAGCheckAndEval(nodesHT);
 //    printf("END ------\n\n");
 //}
-///**************************************************---PrintListHT---*************************************************/
+
+/**************************************************---PrintListHT---*************************************************/
 //void PrintListHT() {//struct ListHT *listHT
 //    printf("START PrintListHT\n");
 //    int count = nodesHT->count;

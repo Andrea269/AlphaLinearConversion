@@ -307,7 +307,7 @@ struct Node *Inst(struct Node *n, struct Node *l, struct Node *sub) {
         case App:
             return InitApp(Inst(n->content.app.left, l, sub), Inst(n->content.app.right, l, sub));
         case Lam:
-            n1 = InitLam(NULL, NULL);
+            n1 = InitLam(InitBVar(NULL), InitFVar(NULL));
             n->copy = n1;
             n1->content.lam.body = Inst(n->content.lam.body, l, sub);
             n->copy = NULL;
