@@ -242,12 +242,13 @@ void TestFunRicNoJTHConstructor() {
     nodesHT = InitListHT();
 
     struct Node *var = PushToNodes(InitBVar(NULL));
+    struct Node *node1Var = PushToNodes(InitFVar(NULL));
 
     struct ListHT *argF = InitListHT();
-    struct Node *node1Var = PushToNodes(InitFVar(NULL));
+    struct Node *node0Var = PushToNodes(InitFVar(NULL));
     struct Node *node2Var = PushToNodes(InitFVar(NULL));
     struct Node *node3Var = PushToNodes(InitFVar(NULL));
-    PushToListHT(argF, node1Var);
+    PushToListHT(argF, node0Var);
     PushToListHT(argF, node2Var);
     PushToListHT(argF, node3Var);
     struct Node *f = PushToNodes(InitApp(node1Var, node1Var));

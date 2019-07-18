@@ -382,7 +382,7 @@ struct Node *WeakCbVEval(struct Node *n) {//riduzione....
             n->content.let.var->content.bvar.binder = WeakCbVEval(n->content.let.t2);
             n1 = n->content.let.t3;
             return WeakCbVEval(n1);
-        case FRic://todo testare
+        case FRic:
             listElement = n->content.fRic.arg->head;
             for (int i = 0; i < n->content.fRic.arg->count - 1; ++i) {
                 listElement = listElement->next;
@@ -393,6 +393,7 @@ struct Node *WeakCbVEval(struct Node *n) {//riduzione....
                 n1=Inst(n->content.fRic.t, n->content.fRic.var, n);//b
                 return WeakCbVEval(ReductionJ(n1, n->content.fRic.arg));
             }
+            n->content.fRic.t=WeakCbVEval(n->content.fRic.t);
             return n;
         case GCoRic:
             return n;
@@ -402,7 +403,6 @@ struct Node *WeakCbVEval(struct Node *n) {//riduzione....
             return n->content.constant.var;
     }
 }
-
 /***************************************---BuildEquivalenceClass---**************************************/
 void PushNeighbour(struct Node *m, struct Node *c) {
     PushToListHT(m->neighbour, c);
