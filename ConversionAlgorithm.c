@@ -307,7 +307,7 @@ struct Node *Inst(struct Node *n, struct Node *l, struct Node *sub) {
         case App:
             return InitApp(Inst(n->content.app.left, l, sub), Inst(n->content.app.right, l, sub));
         case Lam:
-            n1 = InitLam(NULL, NULL);//todo
+            n1 = InitLam(NULL, NULL);
             n->copy = n1;
             n1->content.lam.body = Inst(n->content.lam.body, l, sub);
             n->copy = NULL;
@@ -378,7 +378,7 @@ struct Node *WeakCbVEval(struct Node *n) {//riduzione....
                 default:
                     return n;
             }
-        case Let://todo testare
+        case Let:
             n->content.let.var->content.bvar.binder = WeakCbVEval(n->content.let.t2);
             n1 = n->content.let.t3;
             return WeakCbVEval(n1);
