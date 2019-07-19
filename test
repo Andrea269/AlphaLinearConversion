@@ -1,0 +1,17 @@
+if [ $# -eq 0 ]; then
+    echo "Usage:   ./test [c files to build & run]"
+    echo "Example: ./test main.c church.c"
+    exit 1
+fi
+
+for var in "$@"
+do
+    gcc $var -o test.o && ./test.o
+    if [ $? -eq 0 ]; then
+       echo "[$var] OKAY"
+    else
+       echo "[$var] FAIL"
+       exit 1
+    fi
+    rm -f test.o
+done
