@@ -2,24 +2,18 @@
 // Created by andrea on 13/05/19.
 //
 #include "ConversionAlgorithm.c"
-struct ListHT *nodesHT;//Node List
-/*****************************---USEFUL FUNCTION---************************************/
-struct Node *PushToNodes(struct Node *node){
-    PushToListHT(nodesHT, node);
-    return node;
-};
 /**************************************************---TEST---*************************************************/
 void TestAppCorrect() {
     printf("START TestAppCorrect\n\n");
     nodesHT = InitListHT();
-    struct Node *node1Var = PushToNodes(InitFVar(NULL));
-    struct Node *node2Var = PushToNodes(InitFVar(NULL));
-    struct Node *node1App = PushToNodes(InitApp(node1Var, node2Var));
-    struct Node *node3Var = PushToNodes(InitBVar(NULL));
-    struct Node *node1Lam = PushToNodes(InitLam(node3Var, node1App));
-    struct Node *node11App = PushToNodes(InitApp(node1Var, node2Var));
-    struct Node *node4Var = PushToNodes(InitBVar(NULL));
-    struct Node *node11Lam = PushToNodes(InitLam(node4Var, node11App));
+    struct Node *node1Var = InitFVar(NULL);
+    struct Node *node2Var = InitFVar(NULL);
+    struct Node *node1App = InitApp(node1Var, node2Var);
+    struct Node *node3Var = InitBVar(NULL);
+    struct Node *node1Lam = InitLam(node3Var, node1App);
+    struct Node *node11App = InitApp(node1Var, node2Var);
+    struct Node *node4Var = InitBVar(NULL);
+    struct Node *node11Lam = InitLam(node4Var, node11App);
 
     struct Node *r1=WeakCbVEval(node1Lam);
     struct Node *r2=WeakCbVEval(node11Lam);
@@ -30,14 +24,14 @@ void TestAppCorrect() {
 void TestAppError() {
     printf("START TestAppError\n\n");
     nodesHT = InitListHT();
-    struct Node *node1Var = PushToNodes(InitFVar(NULL));
-    struct Node *node2Var = PushToNodes(InitFVar(NULL));
-    struct Node *node1App = PushToNodes(InitApp(node1Var, node2Var));
-    struct Node *node3Var = PushToNodes(InitBVar(NULL));
-    struct Node *node1Lam = PushToNodes(InitLam(node3Var, node1App));
-    struct Node *node11App = PushToNodes(InitApp(node1Var, node3Var));
-    struct Node *node4Var = PushToNodes(InitBVar(NULL));
-    struct Node *node11Lam = PushToNodes(InitLam(node4Var, node11App));
+    struct Node *node1Var = InitFVar(NULL);
+    struct Node *node2Var = InitFVar(NULL);
+    struct Node *node1App = InitApp(node1Var, node2Var);
+    struct Node *node3Var = InitBVar(NULL);
+    struct Node *node1Lam = InitLam(node3Var, node1App);
+    struct Node *node11App = InitApp(node1Var, node3Var);
+    struct Node *node4Var = InitBVar(NULL);
+    struct Node *node11Lam = InitLam(node4Var, node11App);
 
     struct Node *r1=WeakCbVEval(node1Lam);
     struct Node *r2=WeakCbVEval(node11Lam);
@@ -48,37 +42,36 @@ void TestAppError() {
 void TestMatchConstructor() {
     printf("START TestMatchConstructor\n\n");
     nodesHT = InitListHT();
-    struct NodeType *type = malloc(sizeof(struct NodeType));
     struct ListHT *arg = InitListHT();
-    struct Node *node11Var = PushToNodes(InitFVar(NULL));
-    struct Node *node12Var = PushToNodes(InitFVar(NULL));
-    struct Node *node13Var = PushToNodes(InitFVar(NULL));
+    struct Node *node11Var = InitFVar(NULL);
+    struct Node *node12Var = InitFVar(NULL);
+    struct Node *node13Var = InitFVar(NULL);
     PushToListHT(arg, node11Var);
     PushToListHT(arg, node12Var);
     PushToListHT(arg, node13Var);
-    struct Node *node1Var = PushToNodes(InitBVar(NULL));
-    struct Node *node2Var = PushToNodes(InitFVar(NULL));
-    struct Node *node3Var = PushToNodes(InitFVar(NULL));
-    struct ListHT *branches = InitListHT();
-    struct Node *node1Lam = PushToNodes(InitLam(node1Var, node2Var));
-    struct Node *node1App = PushToNodes(InitApp(node1Lam, node2Var));
-    struct Node *node2App = PushToNodes(InitApp(node2Var, node2Var));
-    struct Node *node3App = PushToNodes(InitApp(node1Lam, node3Var));
+    struct Node *node1Var = InitBVar(NULL);
+    struct Node *node2Var = InitFVar(NULL);
+    struct Node *node3Var = InitFVar(NULL);
+    struct ListHT *branches =  InitListHT();
+    struct Node *node1Lam = InitLam(node1Var, node2Var);
+    struct Node *node1App = InitApp(node1Lam, node2Var);
+    struct Node *node2App = InitApp(node2Var, node2Var);
+    struct Node *node3App = InitApp(node1Lam, node3Var);
     PushToListHT(branches, node1App);
     PushToListHT(branches, node2App);
     PushToListHT(branches, node3App);
     struct ListHT *branches2 = InitListHT();
-    struct Node *node1Lam2 = PushToNodes(InitLam(node1Var, node2Var));
-    struct Node *node1App2 = PushToNodes(InitApp(node1Lam2, node2Var));
-    struct Node *node2App2 = PushToNodes(InitApp(node2Var, node2Var));
-    struct Node *node3App2 = PushToNodes(InitApp(node1Lam2, node3Var));
+    struct Node *node1Lam2 = InitLam(node1Var, node2Var);
+    struct Node *node1App2 = InitApp(node1Lam2, node2Var);
+    struct Node *node2App2 = InitApp(node2Var, node2Var);
+    struct Node *node3App2 = InitApp(node1Lam2, node3Var);
     PushToListHT(branches2, node1App2);
     PushToListHT(branches2, node2App2);
     PushToListHT(branches2, node3App2);
-    struct Node *nodeConst = PushToNodes(InitConstructor(3, arg));
-    struct Node *nodeMatchConst = PushToNodes(InitMatch(type, type, nodeConst, branches));
-    struct Node *nodeConst2 = PushToNodes(InitConstructor(3, arg));
-    struct Node *nodeMatchConst2 = PushToNodes(InitMatch(type, type, nodeConst2, branches2));
+    struct Node *nodeConst = InitConstructor(3, arg);
+    struct Node *nodeMatchConst = InitMatch(nodeConst, branches);
+    struct Node *nodeConst2 = InitConstructor(3, arg);
+    struct Node *nodeMatchConst2 = InitMatch(nodeConst2, branches2);
 
     struct Node *r1=WeakCbVEval(nodeMatchConst);
     struct Node *r2=WeakCbVEval(nodeMatchConst2);
@@ -89,37 +82,40 @@ void TestMatchConstructor() {
 void TestMatchCoRic() {
     printf("START TestMatchCoRic\n\n");
     nodesHT = InitListHT();
-    struct NodeType *type = malloc(sizeof(struct NodeType));
+    struct Node *var = InitBVar(NULL);
+    struct Node *node0Var = InitFVar(NULL);
     struct ListHT *arg = InitListHT();
-    struct Node *node11Var = PushToNodes(InitFVar(NULL));
-    struct Node *node12Var = PushToNodes(InitFVar(NULL));
-    struct Node *node13Var = PushToNodes(InitFVar(NULL));
+    struct Node *node11Var = InitFVar(NULL);
+    struct Node *node12Var = InitFVar(NULL);
+    struct Node *node13Var = InitFVar(NULL);
     PushToListHT(arg, node11Var);
     PushToListHT(arg, node12Var);
     PushToListHT(arg, node13Var);
-    struct Node *node1Var = PushToNodes(InitBVar(NULL));
-    struct Node *node2Var = PushToNodes(InitFVar(NULL));
-    struct Node *node3Var = PushToNodes(InitFVar(NULL));
+    struct Node *node1Var = InitBVar(NULL);
+    struct Node *node2Var = InitFVar(NULL);
+    struct Node *node3Var = InitFVar(NULL);
     struct ListHT *branches = InitListHT();
-    struct Node *node1Lam = PushToNodes(InitLam(node1Var, node2Var));
-    struct Node *node1App = PushToNodes(InitApp(node1Lam, node2Var));
-    struct Node *node2App = PushToNodes(InitApp(node2Var, node2Var));
-    struct Node *node3App = PushToNodes(InitApp(node1Lam, node3Var));
+    struct Node *node1Lam = InitLam(node1Var, node2Var);
+    struct Node *node1App = InitApp(node1Lam, node2Var);
+    struct Node *node2App = InitApp(node2Var, node2Var);
+    struct Node *node3App = InitApp(node1Lam, node3Var);
     PushToListHT(branches, node1App);
     PushToListHT(branches, node2App);
     PushToListHT(branches, node3App);
     struct ListHT *branches2 = InitListHT();
-    struct Node *node1Lam2 = PushToNodes(InitLam(node1Var, node2Var));
-    struct Node *node1App2 = PushToNodes(InitApp(node1Lam2, node2Var));
-    struct Node *node2App2 = PushToNodes(InitApp(node2Var, node2Var));
-    struct Node *node3App2 = PushToNodes(InitApp(node1Lam2, node3Var));
+    struct Node *node1Lam2 = InitLam(node1Var, node2Var);
+    struct Node *node1App2 = InitApp(node1Lam2, node2Var);
+    struct Node *node2App2 = InitApp(node2Var, node2Var);
+    struct Node *node3App2 = InitApp(node1Lam2, node3Var);
     PushToListHT(branches2, node1App2);
     PushToListHT(branches2, node2App2);
     PushToListHT(branches2, node3App2);
-    struct Node *nodeGcoric=PushToNodes(InitGCoRic(type, 3, arg));
-    struct Node *nodeMatchGcoric =PushToNodes( InitMatch( type, type, nodeGcoric, branches));
-    struct Node *nodeGcoric2=PushToNodes(InitGCoRic(type, 3, arg));
-    struct Node *nodeMatchGcoric2 = PushToNodes(InitMatch( type, type, nodeGcoric2, branches2));
+    struct Node *f = InitApp(node0Var, node0Var);
+    struct Node *nodeGcoric=InitGCoRic(var, f, 3, arg);
+    struct Node *nodeMatchGcoric = InitMatch(nodeGcoric, branches);
+    struct Node *f2 = InitApp(node0Var, node0Var);
+    struct Node *nodeGcoric2=InitGCoRic(var, f2, 3, arg);
+    struct Node *nodeMatchGcoric2 = InitMatch(nodeGcoric2, branches2);
 
     struct Node *r1=WeakCbVEval(nodeMatchGcoric);
     struct Node *r2=WeakCbVEval(nodeMatchGcoric2);
@@ -130,38 +126,40 @@ void TestMatchCoRic() {
 void TestMatchError() {
     printf("START TestMatchError\n\n");
     nodesHT = InitListHT();
-    struct NodeType *type = malloc(sizeof(struct NodeType));
+    struct Node *var = InitBVar(NULL);
+    struct Node *node0Var = InitFVar(NULL);
 
     struct ListHT *arg = InitListHT();
-    struct Node *node11Var = PushToNodes(InitFVar(NULL));
-    struct Node *node12Var = PushToNodes(InitFVar(NULL));
-    struct Node *node13Var = PushToNodes(InitFVar(NULL));
+    struct Node *node11Var = InitFVar(NULL);
+    struct Node *node12Var = InitFVar(NULL);
+    struct Node *node13Var = InitFVar(NULL);
     PushToListHT(arg, node11Var);
     PushToListHT(arg, node12Var);
     PushToListHT(arg, node13Var);
-    struct Node *node1Var = PushToNodes(InitBVar(NULL));
-    struct Node *node2Var = PushToNodes(InitFVar(NULL));
-    struct Node *node3Var = PushToNodes(InitFVar(NULL));
+    struct Node *node1Var = InitBVar(NULL);
+    struct Node *node2Var = InitFVar(NULL);
+    struct Node *node3Var = InitFVar(NULL);
     struct ListHT *branches = InitListHT();
-    struct Node *node1Lam = PushToNodes(InitLam(node1Var, node2Var));
-    struct Node *node1App = PushToNodes(InitApp(node1Lam, node2Var));
-    struct Node *node2App = PushToNodes(InitApp(node2Var, node2Var));
-    struct Node *node3App = PushToNodes(InitApp(node1Lam, node3Var));
+    struct Node *node1Lam = InitLam(node1Var, node2Var);
+    struct Node *node1App = InitApp(node1Lam, node2Var);
+    struct Node *node2App = InitApp(node2Var, node2Var);
+    struct Node *node3App = InitApp(node1Lam, node3Var);
     PushToListHT(branches, node1App);
     PushToListHT(branches, node2App);
     PushToListHT(branches, node3App);
     struct ListHT *branches2 = InitListHT();
-    struct Node *node1Lam2 = PushToNodes(InitLam(node1Var, node2Var));
-    struct Node *node1App2 = PushToNodes(InitApp(node1Lam2, node2Var));
-    struct Node *node2App2 = PushToNodes(InitApp(node2Var, node2Var));
-    struct Node *node3App2 = PushToNodes(InitApp(node1Lam2, node3Var));
+    struct Node *node1Lam2 = InitLam(node1Var, node2Var);
+    struct Node *node1App2 = InitApp(node1Lam2, node2Var);
+    struct Node *node2App2 = InitApp(node2Var, node2Var);
+    struct Node *node3App2 = InitApp(node1Lam2, node3Var);
     PushToListHT(branches2, node1App2);
     PushToListHT(branches2, node2App2);
     PushToListHT(branches2, node3App2);
-    struct Node *nodeConst = PushToNodes(InitConstructor(3, arg));
-    struct Node *nodeMatchConst = PushToNodes(InitMatch(type, type, nodeConst, branches));
-    struct Node *nodeGcoric2=PushToNodes(InitGCoRic(type, 3, arg));
-    struct Node *nodeMatchGcoric2 = PushToNodes(InitMatch( type, type, nodeGcoric2, branches2));
+    struct Node *nodeConst = InitConstructor(3, arg);
+    struct Node *nodeMatchConst = InitMatch(nodeConst, branches);
+    struct Node *f = InitApp(node0Var, node0Var);
+    struct Node *nodeGcoric2=InitGCoRic(var, f, 3, arg);
+    struct Node *nodeMatchGcoric2 = InitMatch(nodeGcoric2, branches2);
 
     struct Node *r1=WeakCbVEval(nodeMatchConst);
     struct Node *r2=WeakCbVEval(nodeMatchGcoric2);
@@ -173,16 +171,15 @@ void TestMatchError() {
 void TestLet() {
     printf("START TestLet\n\n");
     nodesHT = InitListHT();
-    struct NodeType *type = malloc(sizeof(struct NodeType));
 
-    struct Node *var = PushToNodes(InitBVar(NULL));
-    struct Node *t2 = PushToNodes(InitFVar(NULL));
-    struct Node *node1App = PushToNodes(InitApp(var, var));
-    struct Node *nodeLet = PushToNodes(InitLet(var, type, t2, node1App));
+    struct Node *var = InitBVar(NULL);
+    struct Node *t2 = InitFVar(NULL);
+    struct Node *node1App = InitApp(var, var);
+    struct Node *nodeLet = InitLet(var, t2, node1App);
 
-    struct Node *var2 = PushToNodes(InitBVar(NULL));
-    struct Node *node1App2 = PushToNodes(InitApp(var2, var2));
-    struct Node *nodeLet2 = PushToNodes(InitLet(var2, type, t2, node1App2));
+    struct Node *var2 = InitBVar(NULL);
+    struct Node *node1App2 = InitApp(var2, var2);
+    struct Node *nodeLet2 = InitLet(var2, t2, node1App2);
 
     struct Node *r1=WeakCbVEval(nodeLet);
     struct Node *r2=WeakCbVEval(nodeLet2);
@@ -192,44 +189,44 @@ void TestLet() {
 }
 
 void TestFunRicJTHConstructor() {
-    printf("START TestLet\n\n");
+    printf("START TestFunRicJTHConstructor\n\n");
     nodesHT = InitListHT();
-    struct Node *node1Var = PushToNodes(InitFVar(NULL));
+    struct Node *node1Var = InitFVar(NULL);
 
-    struct Node *var = PushToNodes(InitBVar(NULL));
+    struct Node *var = InitBVar(NULL);
     struct ListHT *arg = InitListHT();
-    struct Node *node11Var = PushToNodes(InitFVar(NULL));
-    struct Node *node12Var = PushToNodes(InitFVar(NULL));
-    struct Node *node13Var = PushToNodes(InitFVar(NULL));
+    struct Node *node11Var = InitFVar(NULL);
+    struct Node *node12Var = InitFVar(NULL);
+    struct Node *node13Var = InitFVar(NULL);
     PushToListHT(arg, node11Var);
     PushToListHT(arg, node12Var);
     PushToListHT(arg, node13Var);
     struct ListHT *argF = InitListHT();
-    struct Node *node0Var = PushToNodes(InitFVar(NULL));
-    struct Node *node2Var = PushToNodes(InitFVar(NULL));
-    struct Node *nodeConstructor = PushToNodes(InitConstructor(3, arg));
+    struct Node *node0Var = InitFVar(NULL);
+    struct Node *node2Var = InitFVar(NULL);
+    struct Node *nodeConstructor = InitConstructor(3, arg);
     PushToListHT(argF, node0Var);
     PushToListHT(argF, node2Var);
     PushToListHT(argF, nodeConstructor);
-    struct Node *f = PushToNodes(InitApp(node1Var, node1Var));
-    struct Node *nodeFunRic = PushToNodes(InitFRic(var, f, 3, argF));
+    struct Node *f = InitApp(node1Var, node1Var);
+    struct Node *nodeFunRic = InitFRic(var, f, 3, argF);
 
     struct ListHT *arg2 = InitListHT();
-    struct Node *node112Var = PushToNodes(InitFVar(NULL));
-    struct Node *node122Var = PushToNodes(InitFVar(NULL));
-    struct Node *node132Var = PushToNodes(InitFVar(NULL));
+    struct Node *node112Var = InitFVar(NULL);
+    struct Node *node122Var = InitFVar(NULL);
+    struct Node *node132Var = InitFVar(NULL);
     PushToListHT(arg2, node112Var);
     PushToListHT(arg2, node122Var);
     PushToListHT(arg2, node132Var);
     struct ListHT *argF2 = InitListHT();
-    struct Node *node212Var = PushToNodes(InitFVar(NULL));
-    struct Node *node222Var = PushToNodes(InitFVar(NULL));
-    struct Node *nodeConstructor2 = PushToNodes(InitConstructor(3, arg2));
+    struct Node *node212Var = InitFVar(NULL);
+    struct Node *node222Var = InitFVar(NULL);
+    struct Node *nodeConstructor2 = InitConstructor(3, arg2);
     PushToListHT(argF2, node212Var);
     PushToListHT(argF2, node222Var);
     PushToListHT(argF2, nodeConstructor2);
-    struct Node *f2 = PushToNodes(InitApp(node1Var, node1Var));
-    struct Node *nodeFunRic2 = PushToNodes(InitFRic(var, f2, 3, argF2));
+    struct Node *f2 = InitApp(node1Var, node1Var);
+    struct Node *nodeFunRic2 = InitFRic(var, f2, 3, argF2);
 
 
     struct Node *r1=WeakCbVEval(nodeFunRic);
@@ -239,32 +236,32 @@ void TestFunRicJTHConstructor() {
     printf("END ------\n\n");
 }
 void TestFunRicNoJTHConstructor() {
-    printf("START TestLet\n\n");
+    printf("START TestFunRicNoJTHConstructor\n\n");
     nodesHT = InitListHT();
 
-    struct Node *var = PushToNodes(InitBVar(NULL));
-    struct Node *node1Var = PushToNodes(InitFVar(NULL));
+    struct Node *var = InitBVar(NULL);
+    struct Node *node1Var = InitFVar(NULL);
 
     struct ListHT *argF = InitListHT();
-    struct Node *node0Var = PushToNodes(InitFVar(NULL));
-    struct Node *node2Var = PushToNodes(InitFVar(NULL));
-    struct Node *node3Var = PushToNodes(InitFVar(NULL));
+    struct Node *node0Var = InitFVar(NULL);
+    struct Node *node2Var = InitFVar(NULL);
+    struct Node *node3Var = InitFVar(NULL);
     PushToListHT(argF, node0Var);
     PushToListHT(argF, node2Var);
     PushToListHT(argF, node3Var);
-    struct Node *f = PushToNodes(InitApp(node1Var, node1Var));
+    struct Node *f = InitApp(node1Var, node1Var);
 
-    struct Node *nodeFunRic = PushToNodes(InitFRic(var, f, 3, argF));
+    struct Node *nodeFunRic = InitFRic(var, f, 3, argF);
 
     struct ListHT *argF2 = InitListHT();
-    struct Node *node12Var = PushToNodes(InitFVar(NULL));
-    struct Node *node22Var = PushToNodes(InitFVar(NULL));
-    struct Node *node32Var = PushToNodes(InitFVar(NULL));
+    struct Node *node12Var = InitFVar(NULL);
+    struct Node *node22Var = InitFVar(NULL);
+    struct Node *node32Var = InitFVar(NULL);
     PushToListHT(argF2, node12Var);
     PushToListHT(argF2, node22Var);
     PushToListHT(argF2, node32Var);
-    struct Node *f2 = PushToNodes(InitApp(node1Var, node1Var));
-    struct Node *nodeFunRic2 = PushToNodes(InitFRic(var, f2, 3, argF2));
+    struct Node *f2 = InitApp(node1Var, node1Var);
+    struct Node *nodeFunRic2 = InitFRic(var, f2, 3, argF2);
 
 
     struct Node *r1=WeakCbVEval(nodeFunRic);
@@ -277,43 +274,43 @@ void TestFunRicNoJTHConstructor() {
 void TestFunRicError() {
     printf("START TestFunRicError\n\n");
     nodesHT = InitListHT();
-    struct Node *node1Var = PushToNodes(InitFVar(NULL));;
-    struct Node *nodeBVar = PushToNodes(InitBVar(NULL));
+    struct Node *node1Var = InitFVar(NULL);
+    struct Node *nodeBVar = InitBVar(NULL);
 
-    struct Node *var = PushToNodes(InitBVar(NULL));
+    struct Node *var = InitBVar(NULL);
     struct ListHT *arg = InitListHT();
-    struct Node *node11Var = PushToNodes(InitFVar(NULL));
-    struct Node *node12Var = PushToNodes(InitFVar(NULL));
-    struct Node *node13Var = PushToNodes(InitFVar(NULL));
+    struct Node *node11Var = InitFVar(NULL);
+    struct Node *node12Var = InitFVar(NULL);
+    struct Node *node13Var = InitFVar(NULL);
     PushToListHT(arg, node11Var);
     PushToListHT(arg, node12Var);
     PushToListHT(arg, node13Var);
     struct ListHT *argF = InitListHT();
-    struct Node *node0Var = PushToNodes(InitFVar(NULL));
-    struct Node *node2Var = PushToNodes(InitFVar(NULL));
-    struct Node *nodeConstructor = PushToNodes(InitConstructor(3, arg));
+    struct Node *node0Var = InitFVar(NULL);
+    struct Node *node2Var = InitFVar(NULL);
+    struct Node *nodeConstructor = InitConstructor(3, arg);
     PushToListHT(argF, node0Var);
     PushToListHT(argF, node2Var);
     PushToListHT(argF, nodeConstructor);
-    struct Node *f = PushToNodes(InitApp(node1Var, node1Var));
-    struct Node *nodeFunRic = PushToNodes(InitFRic(var, f, 3, argF));
+    struct Node *f = InitApp(node1Var, node1Var);
+    struct Node *nodeFunRic = InitFRic(var, f, 3, argF);
 
     struct ListHT *arg2 = InitListHT();
-    struct Node *node112Var = PushToNodes(InitFVar(NULL));
-    struct Node *node122Var = PushToNodes(InitFVar(NULL));
-    struct Node *node132Var = PushToNodes(InitFVar(NULL));
+    struct Node *node112Var = InitFVar(NULL);
+    struct Node *node122Var = InitFVar(NULL);
+    struct Node *node132Var = InitFVar(NULL);
     PushToListHT(arg2, node112Var);
     PushToListHT(arg2, node122Var);
     PushToListHT(arg2, node132Var);
     struct ListHT *argF2 = InitListHT();
-    struct Node *node212Var = PushToNodes(InitFVar(NULL));
-    struct Node *node222Var = PushToNodes(InitFVar(NULL));
-    struct Node *nodeConstructor2 = PushToNodes(InitConstructor(3, arg2));
+    struct Node *node212Var = InitFVar(NULL);
+    struct Node *node222Var = InitFVar(NULL);
+    struct Node *nodeConstructor2 = InitConstructor(3, arg2);
     PushToListHT(argF2, node212Var);
     PushToListHT(argF2, node222Var);
     PushToListHT(argF2, nodeConstructor2);
-    struct Node *f2 = PushToNodes(InitLam(nodeBVar, node1Var));
-    struct Node *nodeFunRic2 = PushToNodes(InitFRic(var, f2, 3, argF2));
+    struct Node *f2 = InitLam(nodeBVar, node1Var);
+    struct Node *nodeFunRic2 = InitFRic(var, f2, 3, argF2);
 
 
     struct Node *r1=WeakCbVEval(nodeFunRic);
@@ -336,8 +333,8 @@ int main() {
     TestMatchConstructor();
     TestMatchCoRic();
     TestLet();
-    TestFunRicJTHConstructor();
     TestFunRicNoJTHConstructor();
+    TestFunRicJTHConstructor();
 
     //Test sottostanti è giusto che terminano con un errore, sarebbe errato altrimenti
 //    TestFunRicError();

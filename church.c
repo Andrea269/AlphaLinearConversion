@@ -9,30 +9,25 @@
 #include "ConversionAlgorithm.c"
 
 typedef struct Node* Node;
-struct ListHT *nodesHT;
-Node PushToNodes(Node node){
-    PushToListHT(nodesHT, node);
-    return node;
-};
 
 Node num(int n) {
     // Crea numerali di Church
     // num(n) == \ab. a^n(b)
-    Node a = PushToNodes(InitBVar(NULL));
-    Node b = PushToNodes(InitBVar(NULL));
+    Node a = InitBVar(NULL);
+    Node b = InitBVar(NULL);
     Node body = b;
     for(int i=0; i<n; i++) {
-        body = PushToNodes(InitApp(a, body));
+        body = InitApp(a, body);
     }
-    Node absb = PushToNodes(InitLam(b, body));
-    Node absa = PushToNodes(InitLam(a, absb));
+    Node absb = InitLam(b, body);
+    Node absa = InitLam(a, absb);
     return absa;
 }
 
 Node mk_id() {
     // Crea identita' \x.x
-    Node x = PushToNodes(InitBVar(NULL));
-    Node abs = PushToNodes(InitLam(x, x));
+    Node x = InitBVar(NULL);
+    Node abs = InitLam(x, x);
     return abs;
 }
 
@@ -42,7 +37,6 @@ Node mk_apps(Node head, Node* args) {
     while(*args) {
         Node arg = *args++;
         head = InitApp(head, arg);
-        PushToNodes(head);
     }
     return head;
 }
