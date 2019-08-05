@@ -21,7 +21,7 @@ struct NodeFVar {
     struct Node *var;
 };
 struct NodeBVar {
-    struct Node *binder;//NodeLam
+    struct Node *binder;//NodeLam or NodeLet or NodeFRic or NodeGCoRic
 };
 struct NodeShared {
     struct Node *body;
@@ -34,9 +34,6 @@ struct NodeLam {
     struct Node *var;//NodeBVar
     struct Node *body;
 };
-//struct NodeType {
-//    int dummy;
-//};
 struct NodeJthConstr {
     int j;
     struct ListHT *arg;
@@ -512,44 +509,50 @@ void Propagate(struct Node *m, struct Node *c) {//propagazione nodi....
             PrintExit(3);
         case FRic:
             if (c->label == FRic){
-                PushNeighbour(m->content.fRic.t, c->content.fRic.t);
-                struct ListElement *iter = m->content.fRic.arg->head;
-                struct ListElement *iter2 = c->content.fRic.arg->head;
-                for (int i = 0; i < m->content.fRic.arg->count; ++i) {
-                    PushNeighbour(iter->node, iter2->node);
-                    iter = iter->next;
-                    iter2 = iter2->next;
+                if(m->content.fRic.arg->count==c->content.fRic.arg->count){
+                    PushNeighbour(m->content.fRic.t, c->content.fRic.t);
+                    struct ListElement *iter = m->content.fRic.arg->head;
+                    struct ListElement *iter2 = c->content.fRic.arg->head;
+                    for (int i = 0; i < m->content.fRic.arg->count; ++i) {
+                        PushNeighbour(iter->node, iter2->node);
+                        iter = iter->next;
+                        iter2 = iter2->next;
+                    }
                 }
             }else
                 PrintExit(3);
             break;
         case GCoRic:
             if (c->label == GCoRic){
-                PushNeighbour(m->content.gCoRic.t, c->content.gCoRic.t);
-                struct ListElement *iter = m->content.gCoRic.arg->head;
-                struct ListElement *iter2 = c->content.gCoRic.arg->head;
-                for (int i = 0; i < m->content.gCoRic.arg->count; ++i) {
-                    PushNeighbour(iter->node, iter2->node);
-                    iter = iter->next;
-                    iter2 = iter2->next;
+                if(m->content.gCoRic.arg->count==c->content.gCoRic.arg->count){
+                    PushNeighbour(m->content.gCoRic.t, c->content.gCoRic.t);
+                    struct ListElement *iter = m->content.gCoRic.arg->head;
+                    struct ListElement *iter2 = c->content.gCoRic.arg->head;
+                    for (int i = 0; i < m->content.gCoRic.arg->count; ++i) {
+                        PushNeighbour(iter->node, iter2->node);
+                        iter = iter->next;
+                        iter2 = iter2->next;
+                    }
                 }
             }else
                 PrintExit(3);
             break;
         case Constructor:
             if (c->label == Constructor && m->content.jCostr.j==c->content.jCostr.j){
-                struct ListElement *iter = m->content.jCostr.arg->head;
-                struct ListElement *iter2 = c->content.jCostr.arg->head;
-                for (int i = 0; i < m->content.jCostr.arg->count; ++i) {
-                    PushNeighbour(iter->node, iter2->node);
-                    iter = iter->next;
-                    iter2 = iter2->next;
+                if(m->content.jCostr.arg->count==c->content.jCostr.arg->count){
+                    struct ListElement *iter = m->content.jCostr.arg->head;
+                    struct ListElement *iter2 = c->content.jCostr.arg->head;
+                    for (int i = 0; i < m->content.jCostr.arg->count; ++i) {
+                        PushNeighbour(iter->node, iter2->node);
+                        iter = iter->next;
+                        iter2 = iter2->next;
+                    }
                 }
             }else
                 PrintExit(3);
             break;
-        case Constant://non dovrebbe propagarsi
-            break; //break or fail???
+        case Constant://non dovrebbe propagarsi mai
+            PrintExit(3);
     }
 }
 
