@@ -17,6 +17,8 @@ void TestAppCorrect() {
 
     struct Node *r1=WeakCbVEval(node1Lam);
     struct Node *r2=WeakCbVEval(node11Lam);
+    r1->root=True;
+    r2->root=True;
     PushNeighbour(r1, r2);
     DAGCheckAndEval(nodesHT);
     printf("END ------\n\n");
@@ -35,6 +37,8 @@ void TestAppError() {
 
     struct Node *r1=WeakCbVEval(node1Lam);
     struct Node *r2=WeakCbVEval(node11Lam);
+    r1->root=True;
+    r2->root=True;
     PushNeighbour(r1, r2);
     DAGCheckAndEval(nodesHT);
     printf("END ------\n\n");
@@ -75,6 +79,8 @@ void TestMatchConstructor() {
 
     struct Node *r1=WeakCbVEval(nodeMatchConst);
     struct Node *r2=WeakCbVEval(nodeMatchConst2);
+    r1->root=True;
+    r2->root=True;
     PushNeighbour(r1, r2);
     DAGCheckAndEval(nodesHT);
     printf("END ------\n\n");
@@ -119,6 +125,8 @@ void TestMatchCoRic() {
 
     struct Node *r1=WeakCbVEval(nodeMatchGcoric);
     struct Node *r2=WeakCbVEval(nodeMatchGcoric2);
+    r1->root=True;
+    r2->root=True;
     PushNeighbour(r1, r2);
     DAGCheckAndEval(nodesHT);
     printf("END ------\n\n");
@@ -163,6 +171,8 @@ void TestMatchError() {
 
     struct Node *r1=WeakCbVEval(nodeMatchConst);
     struct Node *r2=WeakCbVEval(nodeMatchGcoric2);
+    r1->root=True;
+    r2->root=True;
     PushNeighbour(r1, r2);
     DAGCheckAndEval(nodesHT);
     printf("END ------\n\n");
@@ -183,6 +193,8 @@ void TestLet() {
 
     struct Node *r1=WeakCbVEval(nodeLet);
     struct Node *r2=WeakCbVEval(nodeLet2);
+    r1->root=True;
+    r2->root=True;
     PushNeighbour(r1, r2);
     DAGCheckAndEval(nodesHT);
     printf("END ------\n\n");
@@ -231,6 +243,8 @@ void TestFunRicJTHConstructor() {
 
     struct Node *r1=WeakCbVEval(nodeFunRic);
     struct Node *r2=WeakCbVEval(nodeFunRic2);
+    r1->root=True;
+    r2->root=True;
     PushNeighbour(r1, r2);
     DAGCheckAndEval(nodesHT);
     printf("END ------\n\n");
@@ -266,6 +280,8 @@ void TestFunRicNoJTHConstructor() {
 
     struct Node *r1=WeakCbVEval(nodeFunRic);
     struct Node *r2=WeakCbVEval(nodeFunRic2);
+    r1->root=True;
+    r2->root=True;
     PushNeighbour(r1, r2);
     DAGCheckAndEval(nodesHT);
     printf("END ------\n\n");
@@ -315,6 +331,8 @@ void TestFunRicError() {
 
     struct Node *r1=WeakCbVEval(nodeFunRic);
     struct Node *r2=WeakCbVEval(nodeFunRic2);
+    r1->root=True;
+    r2->root=True;
     PushNeighbour(r1, r2);
     DAGCheckAndEval(nodesHT);
     printf("END ------\n\n");

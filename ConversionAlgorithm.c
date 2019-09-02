@@ -87,6 +87,9 @@ struct Node {
     struct ListHT *parentNodes;
     struct ListHT *neighbour;
     struct ListHT *queue;
+    enum Bool root;
+    enum Bool reachable;
+    enum Bool visited;
 };
 struct ListElement {
     struct Node *node;
@@ -103,6 +106,7 @@ void PrintExit(int error) {
     printf("\nFail: Process finished with exit code %d\n", error);
     exit(error);
 }
+
 struct ListHT *InitListHT() {
     struct ListHT *list = malloc(sizeof(struct ListHT));
     struct ListElement *elementList = malloc(sizeof(struct ListElement));
@@ -111,6 +115,7 @@ struct ListHT *InitListHT() {
     list->count = 0;
     return list;
 };
+
 void PushToListHT(struct ListHT *list, struct Node *prtNode) {
     list->tail->node = prtNode;
     struct ListElement *elementList = malloc(sizeof(struct ListElement));
@@ -118,6 +123,7 @@ void PushToListHT(struct ListHT *list, struct Node *prtNode) {
     list->tail = elementList;// list->tail->next
     list->count = list->count + 1;
 };
+
 void PushParentListHT(struct Node *node, struct ListHT *list) {
     struct ListElement *listElement;
     listElement = list->head;
@@ -126,6 +132,7 @@ void PushParentListHT(struct Node *node, struct ListHT *list) {
         listElement = listElement->next;
     }
 }
+
 /******************************---INIT-NODE---*************************************/
 struct Node *InitFVar(struct Node *var) {
     struct Node *node = malloc(sizeof(struct Node));
@@ -134,11 +141,14 @@ struct Node *InitFVar(struct Node *var) {
     node->canonic = NULL;
     node->copy = NULL;
     node->building = False;
+    node->root = False;
+    node->visited = False;
     node->parentNodes = InitListHT();
     node->neighbour = InitListHT();
     PushToListHT(nodesHT, node);
     return node;
 }
+
 struct Node *InitBVar(struct Node *binder) {
     if (binder != NULL && binder->label != Lam) {
         printf("Exit InitVar-> error in un nodo Var il nodo binder deve essere un Lam\n");
@@ -150,11 +160,14 @@ struct Node *InitBVar(struct Node *binder) {
     node->canonic = NULL;
     node->copy = NULL;
     node->building = False;
+    node->root = False;
+    node->visited = False;
     node->parentNodes = InitListHT();
     node->neighbour = InitListHT();
     PushToListHT(nodesHT, node);
     return node;
 }
+
 struct Node *InitShared(struct Node *body) {
     struct Node *node = malloc(sizeof(struct Node));
     node->label = Shared;
@@ -162,11 +175,14 @@ struct Node *InitShared(struct Node *body) {
     node->canonic = NULL;
     node->copy = NULL;
     node->building = False;
+    node->root = False;
+    node->visited = False;
     node->parentNodes = InitListHT();
     node->neighbour = InitListHT();
     PushToListHT(nodesHT, node);
     return node;
 }
+
 struct Node *InitApp(struct Node *left, struct Node *right) {
     struct Node *node = malloc(sizeof(struct Node));
     node->label = App;
@@ -175,6 +191,8 @@ struct Node *InitApp(struct Node *left, struct Node *right) {
     node->canonic = NULL;
     node->copy = NULL;
     node->building = False;
+    node->root = False;
+    node->visited = False;
     node->parentNodes = InitListHT();
     node->neighbour = InitListHT();
     PushToListHT(left->parentNodes, node);
@@ -182,6 +200,7 @@ struct Node *InitApp(struct Node *left, struct Node *right) {
     PushToListHT(nodesHT, node);
     return node;
 }
+
 struct Node *InitLam(struct Node *var, struct Node *body) {
     if (var->label != BVar) {
         printf("Exit InitLam-> error in un nodo Lam il nodo sinistro deve essere un BVar\n");
@@ -194,6 +213,8 @@ struct Node *InitLam(struct Node *var, struct Node *body) {
     node->canonic = NULL;
     node->copy = NULL;
     node->building = False;
+    node->root = False;
+    node->visited = False;
     node->parentNodes = InitListHT();
     node->neighbour = InitListHT();
     var->content.bvar.binder = node;
@@ -202,6 +223,7 @@ struct Node *InitLam(struct Node *var, struct Node *body) {
     PushToListHT(nodesHT, node);
     return node;
 }
+
 struct Node *InitConstructor(int j, struct ListHT *arg) {
     struct Node *node = malloc(sizeof(struct Node));
     node->label = Constructor;
@@ -210,12 +232,15 @@ struct Node *InitConstructor(int j, struct ListHT *arg) {
     node->canonic = NULL;
     node->copy = NULL;
     node->building = False;
+    node->root = False;
+    node->visited = False;
     node->parentNodes = InitListHT();
     node->neighbour = InitListHT();
     PushParentListHT(node, arg);
     PushToListHT(nodesHT, node);
     return node;
 }
+
 struct Node *InitFRic(struct Node *var, struct Node *body, int n, struct ListHT *arg) {
     if (var->label != BVar) {
         printf("Exit InitLam-> error in un nodo FRic il nodo var deve essere un BVar\n");
@@ -224,12 +249,14 @@ struct Node *InitFRic(struct Node *var, struct Node *body, int n, struct ListHT 
     struct Node *node = malloc(sizeof(struct Node));
     node->label = FRic;
     node->content.fRic.var = var;
-    node->content.fRic.t= body;
+    node->content.fRic.t = body;
     node->content.fRic.n = n;
     node->content.fRic.arg = arg;
     node->canonic = NULL;
     node->copy = NULL;
     node->building = False;
+    node->root = False;
+    node->visited = False;
     node->parentNodes = InitListHT();
     node->neighbour = InitListHT();
     var->content.bvar.binder = node;
@@ -237,6 +264,7 @@ struct Node *InitFRic(struct Node *var, struct Node *body, int n, struct ListHT 
     PushToListHT(nodesHT, node);
     return node;
 }
+
 struct Node *InitGCoRic(struct Node *var, struct Node *body, int n, struct ListHT *arg) {
     struct Node *node = malloc(sizeof(struct Node));
     node->label = GCoRic;
@@ -247,12 +275,15 @@ struct Node *InitGCoRic(struct Node *var, struct Node *body, int n, struct ListH
     node->canonic = NULL;
     node->copy = NULL;
     node->building = False;
+    node->root = False;
+    node->visited = False;
     node->parentNodes = InitListHT();
     node->neighbour = InitListHT();
     PushParentListHT(node, arg);
     PushToListHT(nodesHT, node);
     return node;
 }
+
 struct Node *InitMatch(struct Node *body, struct ListHT *branches) {
     if (!(body->label == Constructor || body->label == GCoRic)) {
         printf("Exit InitMatchConstructor-> error in un nodo Match il nodo body deve essere un Constructor o un GCoRic \n");
@@ -267,6 +298,8 @@ struct Node *InitMatch(struct Node *body, struct ListHT *branches) {
     node->canonic = NULL;
     node->copy = NULL;
     node->building = False;
+    node->root = False;
+    node->visited = False;
     node->parentNodes = InitListHT();
     node->neighbour = InitListHT();
     PushParentListHT(node, branches);
@@ -274,6 +307,7 @@ struct Node *InitMatch(struct Node *body, struct ListHT *branches) {
     PushToListHT(nodesHT, node);
     return node;
 }
+
 struct Node *InitLet(struct Node *var, struct Node *t2, struct Node *t3) {
     if (var->label != BVar) {
         printf("Exit InitLet-> error in un nodo Let il nodo var deve essere un Var\n");
@@ -288,6 +322,8 @@ struct Node *InitLet(struct Node *var, struct Node *t2, struct Node *t3) {
     node->canonic = NULL;
     node->copy = NULL;
     node->building = False;
+    node->root = False;
+    node->visited = False;
     node->parentNodes = InitListHT();
     node->neighbour = InitListHT();
     var->content.bvar.binder = node;
@@ -297,6 +333,7 @@ struct Node *InitLet(struct Node *var, struct Node *t2, struct Node *t3) {
     PushToListHT(nodesHT, node);
     return node;
 }
+
 /*************************************---EVALUATE---*****************************************/
 struct Node *Inst(struct Node *n, struct Node *l, struct Node *sub) {
     struct Node *n1;
@@ -337,7 +374,7 @@ struct Node *Inst(struct Node *n, struct Node *l, struct Node *sub) {
             n1->content.fRic.t = Inst(n->content.fRic.t, l, sub);
             struct ListElement *iterArgf = n->content.fRic.arg->head;
             for (int i = 0; i < n->content.fRic.arg->count; ++i) {
-                iterArgf->node=Inst(iterArgf->node, l, sub);
+                iterArgf->node = Inst(iterArgf->node, l, sub);
                 iterArgf = iterArgf->next;
             }
             n->copy = NULL;
@@ -348,16 +385,16 @@ struct Node *Inst(struct Node *n, struct Node *l, struct Node *sub) {
             n1->content.gCoRic.t = Inst(n->content.gCoRic.t, l, sub);
             struct ListElement *iterArgG = n->content.gCoRic.arg->head;
             for (int i = 0; i < n->content.gCoRic.arg->count; ++i) {
-                iterArgG->node=Inst(iterArgG->node, l, sub);
+                iterArgG->node = Inst(iterArgG->node, l, sub);
                 iterArgG = iterArgG->next;
             }
             n->copy = NULL;
             return n1;
         case Constructor:
-            n1=InitConstructor(n->content.jCostr.j, n->content.jCostr.arg);
+            n1 = InitConstructor(n->content.jCostr.j, n->content.jCostr.arg);
             struct ListElement *iterArgC = n1->content.jCostr.arg->head;
             for (int i = 0; i < n1->content.jCostr.arg->count; ++i) {
-                iterArgC->node=Inst(iterArgC->node, l, sub);
+                iterArgC->node = Inst(iterArgC->node, l, sub);
                 iterArgC = iterArgC->next;
             }
             return n1;
@@ -407,11 +444,12 @@ struct Node *WeakCbVEval(struct Node *n) {//riduzione....
                         listElement = listElement->next;
                     }
                     //valuto il ramo j-esimo e poi applico la j
-                    n1=WeakCbVEval(listElement->node);
+                    n1 = WeakCbVEval(listElement->node);
                     n2 = AppReplacement(n1, n->content.match.body->content.jCostr.arg);
-                    return  WeakCbVEval(n2);
+                    return WeakCbVEval(n2);
                 case GCoRic://jDelta-c
-                    n1 = Inst(n->content.match.body->content.gCoRic.t, n->content.match.body->content.gCoRic.var, n->content.match.body);
+                    n1 = Inst(n->content.match.body->content.gCoRic.t, n->content.match.body->content.gCoRic.var,
+                              n->content.match.body);
                     n->content.match.body = AppReplacement(n1, n->content.match.body->content.gCoRic.arg);
                     return WeakCbVEval(n);
                 default:
@@ -427,12 +465,12 @@ struct Node *WeakCbVEval(struct Node *n) {//riduzione....
                 listElement = listElement->next;
             }
             //valuto l'arg j-esimo
-            listElement->node=WeakCbVEval(listElement->node);
-            if(listElement->node->label==Constructor){
-                n1=Inst(n->content.fRic.t, n->content.fRic.var, n);//b
+            listElement->node = WeakCbVEval(listElement->node);
+            if (listElement->node->label == Constructor) {
+                n1 = Inst(n->content.fRic.t, n->content.fRic.var, n);//b
                 return WeakCbVEval(AppReplacement(n1, n->content.fRic.arg));
             }
-            n->content.fRic.t=WeakCbVEval(n->content.fRic.t);
+            n->content.fRic.t = WeakCbVEval(n->content.fRic.t);
             return n;
         case GCoRic:
             return n;
@@ -442,6 +480,7 @@ struct Node *WeakCbVEval(struct Node *n) {//riduzione....
             return n->content.constant.var;
     }
 }
+
 /***************************************---BuildEquivalenceClass---**************************************/
 void PushNeighbour(struct Node *m, struct Node *c) {
     PushToListHT(m->neighbour, c);
@@ -500,55 +539,57 @@ void Propagate(struct Node *m, struct Node *c) {//propagazione nodi....
                 PrintExit(3);
             break;
         case Match:
-            if (c->label == Match)
+            if (c->label == Match && m->content.match.branches->count == c->content.match.branches->count) {
                 PushNeighbour(m->content.match.body, c->content.match.body);
-            else
+                struct ListElement *iter = m->content.match.branches->head;
+                struct ListElement *iter2 = c->content.match.branches->head;
+                for (int i = 0; i < m->content.match.branches->count; ++i) {
+                    PushNeighbour(iter->node, iter2->node);
+                    iter = iter->next;
+                    iter2 = iter2->next;
+                }
+            } else
                 PrintExit(3);
             break;
         case Let://un nodo LET non dovrebbe mai incorrere in questo punto del codice
             PrintExit(3);
         case FRic:
-            if (c->label == FRic){
-                if(m->content.fRic.arg->count==c->content.fRic.arg->count){
-                    PushNeighbour(m->content.fRic.t, c->content.fRic.t);
-                    struct ListElement *iter = m->content.fRic.arg->head;
-                    struct ListElement *iter2 = c->content.fRic.arg->head;
-                    for (int i = 0; i < m->content.fRic.arg->count; ++i) {
-                        PushNeighbour(iter->node, iter2->node);
-                        iter = iter->next;
-                        iter2 = iter2->next;
-                    }
+            if (c->label == FRic && m->content.fRic.arg->count == c->content.fRic.arg->count) {
+                PushNeighbour(m->content.fRic.t, c->content.fRic.t);
+                struct ListElement *iter = m->content.fRic.arg->head;
+                struct ListElement *iter2 = c->content.fRic.arg->head;
+                for (int i = 0; i < m->content.fRic.arg->count; ++i) {
+                    PushNeighbour(iter->node, iter2->node);
+                    iter = iter->next;
+                    iter2 = iter2->next;
                 }
-            }else
+            } else
                 PrintExit(3);
             break;
         case GCoRic:
-            if (c->label == GCoRic){
-                if(m->content.gCoRic.arg->count==c->content.gCoRic.arg->count){
-                    PushNeighbour(m->content.gCoRic.t, c->content.gCoRic.t);
-                    struct ListElement *iter = m->content.gCoRic.arg->head;
-                    struct ListElement *iter2 = c->content.gCoRic.arg->head;
-                    for (int i = 0; i < m->content.gCoRic.arg->count; ++i) {
-                        PushNeighbour(iter->node, iter2->node);
-                        iter = iter->next;
-                        iter2 = iter2->next;
-                    }
+            if (c->label == GCoRic && m->content.gCoRic.arg->count == c->content.gCoRic.arg->count) {
+                PushNeighbour(m->content.gCoRic.t, c->content.gCoRic.t);
+                struct ListElement *iter = m->content.gCoRic.arg->head;
+                struct ListElement *iter2 = c->content.gCoRic.arg->head;
+                for (int i = 0; i < m->content.gCoRic.arg->count; ++i) {
+                    PushNeighbour(iter->node, iter2->node);
+                    iter = iter->next;
+                    iter2 = iter2->next;
                 }
-            }else
+            } else
                 PrintExit(3);
             break;
         case Constructor:
-            if (c->label == Constructor && m->content.jCostr.j==c->content.jCostr.j){
-                if(m->content.jCostr.arg->count==c->content.jCostr.arg->count){
-                    struct ListElement *iter = m->content.jCostr.arg->head;
-                    struct ListElement *iter2 = c->content.jCostr.arg->head;
-                    for (int i = 0; i < m->content.jCostr.arg->count; ++i) {
-                        PushNeighbour(iter->node, iter2->node);
-                        iter = iter->next;
-                        iter2 = iter2->next;
-                    }
+            if (c->label == Constructor && m->content.jCostr.j == c->content.jCostr.j &&
+                m->content.jCostr.arg->count == c->content.jCostr.arg->count) {
+                struct ListElement *iter = m->content.jCostr.arg->head;
+                struct ListElement *iter2 = c->content.jCostr.arg->head;
+                for (int i = 0; i < m->content.jCostr.arg->count; ++i) {
+                    PushNeighbour(iter->node, iter2->node);
+                    iter = iter->next;
+                    iter2 = iter2->next;
                 }
-            }else
+            } else
                 PrintExit(3);
             break;
         case Constant://non dovrebbe propagarsi mai
@@ -564,6 +605,78 @@ void Enqueue(struct Node *n, struct Node *c) {
         PrintExit(2);
 }
 
+void RecWCEval(struct Node *n) {
+    n->reachable = n->root;
+
+    if (n->parentNodes != NULL) {// visit parents
+        struct ListElement *m = n->parentNodes->head;
+        for (int i = 0; i < n->parentNodes->count; ++i) {
+            if (m->node->visited == False)
+                RecWCEval(m->node);
+            //or logico, False cases the value of n->reachable does't change -- cases True is equivalent to assignment
+            if (m->node->reachable == True)
+                n->reachable = m->node->reachable;
+            m = m->next;
+        }
+    }
+
+    if (n->reachable == True) {
+        switch (n->label) {
+            case Lam:
+                n->content.lam.body = WeakCbVEval(n->content.lam.body);
+                PushToListHT(n->content.lam.body->parentNodes, n);
+                break;
+            case Match:
+                n->content.match.body = WeakCbVEval(n->content.match.body);
+                PushToListHT(n->content.match.body->parentNodes, n);
+                if (n->content.match.branches != NULL) {// visit parents
+                    struct ListElement *branches = n->content.match.branches->head;
+                    for (int i = 0; i < n->content.match.branches->count; ++i) {
+                        branches->node = WeakCbVEval(branches->node);
+                        PushToListHT(branches->node->parentNodes, n);
+                        branches = branches->next;
+                    }
+                }
+                break;
+            case FRic:
+                n->content.fRic.t = WeakCbVEval(n->content.fRic.t);
+                PushToListHT(n->content.fRic.t->parentNodes, n);
+                if (n->content.fRic.arg != NULL) {// visit parents
+                    struct ListElement *arg = n->content.fRic.arg->head;
+                    for (int i = 0; i < n->content.fRic.arg->count; ++i) {
+                        arg->node = WeakCbVEval(arg->node);
+                        PushToListHT(arg->node->parentNodes, n);
+                        arg = arg->next;
+                    }
+                }
+                break;
+            case GCoRic:
+                n->content.gCoRic.t = WeakCbVEval(n->content.gCoRic.t);
+                PushToListHT(n->content.gCoRic.t->parentNodes, n);
+                if (n->content.gCoRic.arg != NULL) {// visit parents
+                    struct ListElement *arg = n->content.gCoRic.arg->head;
+                    for (int i = 0; i < n->content.gCoRic.arg->count; ++i) {
+                        arg->node = WeakCbVEval(arg->node);
+                        PushToListHT(arg->node->parentNodes, n);
+                        arg = arg->next;
+                    }
+                }
+                break;
+            case Constructor:
+                if (n->content.jCostr.arg != NULL) {// visit parents
+                    struct ListElement *arg = n->content.jCostr.arg->head;
+                    for (int i = 0; i < n->content.jCostr.arg->count; ++i) {
+                        arg->node = WeakCbVEval(arg->node);
+                        PushToListHT(arg->node->parentNodes, n);
+                        arg = arg->next;
+                    }
+                }
+                break;
+        }
+    }
+    n->visited = True;
+}
+
 void BuildClass(struct Node *c) {
     printf("BuildClass Node, Label= %d\n", c->label);
     c->building = True;
@@ -574,6 +687,13 @@ void BuildClass(struct Node *c) {
     while (c->queue->count > count) {
         count++;
         struct Node *n = iterQueue->node;
+        RecWCEval(n);
+        if (n->reachable == False) {
+            assert(n == c);
+            assert(c->queue->count <= count);
+            c->building = False;
+            return;
+        }
         if (n->parentNodes != NULL) {// visit parents
             struct ListElement *iterParents = n->parentNodes->head;
             for (int i = 0; i < n->parentNodes->count; ++i) {
@@ -584,12 +704,6 @@ void BuildClass(struct Node *c) {
                 iterParents = iterParents->next;
             }
         }
-        if (n->neighbour == NULL || n->neighbour->count == 0) {
-            assert(n == c);
-            assert(c->queue->count <= count);
-            c->building = False;
-            return;
-        }
         if (n->neighbour != NULL) {// visit neighbours
             struct ListElement *iterNeighbour = n->neighbour->head;
             for (int i = 0; i < n->neighbour->count; ++i) {
@@ -597,15 +711,12 @@ void BuildClass(struct Node *c) {
                 iterNeighbour = iterNeighbour->next;
             }
         }
-        if (n->label == Lam) {
-            n->content.lam.body = WeakCbVEval(n->content.lam.body);
-            PushToListHT(n->content.lam.body->parentNodes, n);
-        }
         Propagate(n, c);
         iterQueue = iterQueue->next;
     }
     c->building = False;
 }
+
 
 /*****************************************--- Main-Equivalence&Eval---**************************************/
 void DAGCheckAndEval(struct ListHT *nodesHT) {
