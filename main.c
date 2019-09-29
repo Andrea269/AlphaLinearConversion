@@ -6,8 +6,8 @@
 void TestAppCorrect() {
     printf("START TestAppCorrect\n\n");
     nodesHT = InitListHT();
-    struct Node *node1Var = InitFVar(NULL);
-    struct Node *node2Var = InitFVar(NULL);
+    struct Node *node1Var = InitFVar();
+    struct Node *node2Var = InitFVar();
     struct Node *node1App = InitApp(node1Var, node2Var);
     struct Node *node3Var = InitBVar(NULL);
     struct Node *node1Lam = InitLam(node3Var, node1App);
@@ -15,19 +15,17 @@ void TestAppCorrect() {
     struct Node *node4Var = InitBVar(NULL);
     struct Node *node11Lam = InitLam(node4Var, node11App);
 
-    struct Node *r1=WeakCbVEval(node1Lam);
-    struct Node *r2=WeakCbVEval(node11Lam);
-    r1->root=True;
-    r2->root=True;
-    PushNeighbour(r1, r2);
+    node1Lam->root=True;
+    node11Lam->root=True;
+    PushNeighbour(node1Lam, node11Lam);
     DAGCheckAndEval(nodesHT);
     printf("END ------\n\n");
 }
 void TestAppError() {
     printf("START TestAppError\n\n");
     nodesHT = InitListHT();
-    struct Node *node1Var = InitFVar(NULL);
-    struct Node *node2Var = InitFVar(NULL);
+    struct Node *node1Var = InitFVar();
+    struct Node *node2Var = InitFVar();
     struct Node *node1App = InitApp(node1Var, node2Var);
     struct Node *node3Var = InitBVar(NULL);
     struct Node *node1Lam = InitLam(node3Var, node1App);
@@ -35,11 +33,9 @@ void TestAppError() {
     struct Node *node4Var = InitBVar(NULL);
     struct Node *node11Lam = InitLam(node4Var, node11App);
 
-    struct Node *r1=WeakCbVEval(node1Lam);
-    struct Node *r2=WeakCbVEval(node11Lam);
-    r1->root=True;
-    r2->root=True;
-    PushNeighbour(r1, r2);
+    node1Lam->root=True;
+    node11Lam->root=True;
+    PushNeighbour(node1Lam, node11Lam);
     DAGCheckAndEval(nodesHT);
     printf("END ------\n\n");
 }
@@ -47,15 +43,15 @@ void TestMatchConstructor() {
     printf("START TestMatchConstructor\n\n");
     nodesHT = InitListHT();
     struct ListHT *arg = InitListHT();
-    struct Node *node11Var = InitFVar(NULL);
-    struct Node *node12Var = InitFVar(NULL);
-    struct Node *node13Var = InitFVar(NULL);
+    struct Node *node11Var = InitFVar();
+    struct Node *node12Var = InitFVar();
+    struct Node *node13Var = InitFVar();
     PushToListHT(arg, node11Var);
     PushToListHT(arg, node12Var);
     PushToListHT(arg, node13Var);
     struct Node *node1Var = InitBVar(NULL);
-    struct Node *node2Var = InitFVar(NULL);
-    struct Node *node3Var = InitFVar(NULL);
+    struct Node *node2Var = InitFVar();
+    struct Node *node3Var = InitFVar();
     struct ListHT *branches =  InitListHT();
     struct Node *node1Lam = InitLam(node1Var, node2Var);
     struct Node *node1App = InitApp(node1Lam, node2Var);
@@ -77,11 +73,9 @@ void TestMatchConstructor() {
     struct Node *nodeConst2 = InitConstructor(3, arg);
     struct Node *nodeMatchConst2 = InitMatch(nodeConst2, branches2);
 
-    struct Node *r1=WeakCbVEval(nodeMatchConst);
-    struct Node *r2=WeakCbVEval(nodeMatchConst2);
-    r1->root=True;
-    r2->root=True;
-    PushNeighbour(r1, r2);
+    nodeMatchConst->root=True;
+    nodeMatchConst2->root=True;
+    PushNeighbour(nodeMatchConst, nodeMatchConst2);
     DAGCheckAndEval(nodesHT);
     printf("END ------\n\n");
 }
@@ -89,17 +83,17 @@ void TestMatchCoRic() {
     printf("START TestMatchCoRic\n\n");
     nodesHT = InitListHT();
     struct Node *var = InitBVar(NULL);
-    struct Node *node0Var = InitFVar(NULL);
+    struct Node *node0Var = InitFVar();
     struct ListHT *arg = InitListHT();
-    struct Node *node11Var = InitFVar(NULL);
-    struct Node *node12Var = InitFVar(NULL);
-    struct Node *node13Var = InitFVar(NULL);
+    struct Node *node11Var = InitFVar();
+    struct Node *node12Var = InitFVar();
+    struct Node *node13Var = InitFVar();
     PushToListHT(arg, node11Var);
     PushToListHT(arg, node12Var);
     PushToListHT(arg, node13Var);
     struct Node *node1Var = InitBVar(NULL);
-    struct Node *node2Var = InitFVar(NULL);
-    struct Node *node3Var = InitFVar(NULL);
+    struct Node *node2Var = InitFVar();
+    struct Node *node3Var = InitFVar();
     struct ListHT *branches = InitListHT();
     struct Node *node1Lam = InitLam(node1Var, node2Var);
     struct Node *node1App = InitApp(node1Lam, node2Var);
@@ -123,11 +117,9 @@ void TestMatchCoRic() {
     struct Node *nodeGcoric2=InitGCoRic(var, f2, 3, arg);
     struct Node *nodeMatchGcoric2 = InitMatch(nodeGcoric2, branches2);
 
-    struct Node *r1=WeakCbVEval(nodeMatchGcoric);
-    struct Node *r2=WeakCbVEval(nodeMatchGcoric2);
-    r1->root=True;
-    r2->root=True;
-    PushNeighbour(r1, r2);
+    nodeMatchGcoric->root=True;
+    nodeMatchGcoric2->root=True;
+    PushNeighbour(nodeMatchGcoric, nodeMatchGcoric2);
     DAGCheckAndEval(nodesHT);
     printf("END ------\n\n");
 }
@@ -135,18 +127,18 @@ void TestMatchError() {
     printf("START TestMatchError\n\n");
     nodesHT = InitListHT();
     struct Node *var = InitBVar(NULL);
-    struct Node *node0Var = InitFVar(NULL);
+    struct Node *node0Var = InitFVar();
 
     struct ListHT *arg = InitListHT();
-    struct Node *node11Var = InitFVar(NULL);
-    struct Node *node12Var = InitFVar(NULL);
-    struct Node *node13Var = InitFVar(NULL);
+    struct Node *node11Var = InitFVar();
+    struct Node *node12Var = InitFVar();
+    struct Node *node13Var = InitFVar();
     PushToListHT(arg, node11Var);
     PushToListHT(arg, node12Var);
     PushToListHT(arg, node13Var);
     struct Node *node1Var = InitBVar(NULL);
-    struct Node *node2Var = InitFVar(NULL);
-    struct Node *node3Var = InitFVar(NULL);
+    struct Node *node2Var = InitFVar();
+    struct Node *node3Var = InitFVar();
     struct ListHT *branches = InitListHT();
     struct Node *node1Lam = InitLam(node1Var, node2Var);
     struct Node *node1App = InitApp(node1Lam, node2Var);
@@ -169,11 +161,9 @@ void TestMatchError() {
     struct Node *nodeGcoric2=InitGCoRic(var, f, 3, arg);
     struct Node *nodeMatchGcoric2 = InitMatch(nodeGcoric2, branches2);
 
-    struct Node *r1=WeakCbVEval(nodeMatchConst);
-    struct Node *r2=WeakCbVEval(nodeMatchGcoric2);
-    r1->root=True;
-    r2->root=True;
-    PushNeighbour(r1, r2);
+    nodeMatchConst->root=True;
+    nodeMatchGcoric2->root=True;
+    PushNeighbour(nodeMatchConst, nodeMatchGcoric2);
     DAGCheckAndEval(nodesHT);
     printf("END ------\n\n");
 }
@@ -183,7 +173,7 @@ void TestLet() {
     nodesHT = InitListHT();
 
     struct Node *var = InitBVar(NULL);
-    struct Node *t2 = InitFVar(NULL);
+    struct Node *t2 = InitFVar();
     struct Node *node1App = InitApp(var, var);
     struct Node *nodeLet = InitLet(var, t2, node1App);
 
@@ -191,11 +181,9 @@ void TestLet() {
     struct Node *node1App2 = InitApp(var2, var2);
     struct Node *nodeLet2 = InitLet(var2, t2, node1App2);
 
-    struct Node *r1=WeakCbVEval(nodeLet);
-    struct Node *r2=WeakCbVEval(nodeLet2);
-    r1->root=True;
-    r2->root=True;
-    PushNeighbour(r1, r2);
+    nodeLet->root=True;
+    nodeLet2->root=True;
+    PushNeighbour(nodeLet, nodeLet2);
     DAGCheckAndEval(nodesHT);
     printf("END ------\n\n");
 }
@@ -203,19 +191,19 @@ void TestLet() {
 void TestFunRicJTHConstructor() {
     printf("START TestFunRicJTHConstructor\n\n");
     nodesHT = InitListHT();
-    struct Node *node1Var = InitFVar(NULL);
+    struct Node *node1Var = InitFVar();
 
     struct Node *var = InitBVar(NULL);
     struct ListHT *arg = InitListHT();
-    struct Node *node11Var = InitFVar(NULL);
-    struct Node *node12Var = InitFVar(NULL);
-    struct Node *node13Var = InitFVar(NULL);
+    struct Node *node11Var = InitFVar();
+    struct Node *node12Var = InitFVar();
+    struct Node *node13Var = InitFVar();
     PushToListHT(arg, node11Var);
     PushToListHT(arg, node12Var);
     PushToListHT(arg, node13Var);
     struct ListHT *argF = InitListHT();
-    struct Node *node0Var = InitFVar(NULL);
-    struct Node *node2Var = InitFVar(NULL);
+    struct Node *node0Var = InitFVar();
+    struct Node *node2Var = InitFVar();
     struct Node *nodeConstructor = InitConstructor(3, arg);
     PushToListHT(argF, node0Var);
     PushToListHT(argF, node2Var);
@@ -224,28 +212,20 @@ void TestFunRicJTHConstructor() {
     struct Node *nodeFunRic = InitFRic(var, f, 3, argF);
 
     struct ListHT *arg2 = InitListHT();
-    struct Node *node112Var = InitFVar(NULL);
-    struct Node *node122Var = InitFVar(NULL);
-    struct Node *node132Var = InitFVar(NULL);
-    PushToListHT(arg2, node112Var);
-    PushToListHT(arg2, node122Var);
-    PushToListHT(arg2, node132Var);
+    PushToListHT(arg2, node11Var);
+    PushToListHT(arg2, node12Var);
+    PushToListHT(arg2, node13Var);
     struct ListHT *argF2 = InitListHT();
-    struct Node *node212Var = InitFVar(NULL);
-    struct Node *node222Var = InitFVar(NULL);
     struct Node *nodeConstructor2 = InitConstructor(3, arg2);
-    PushToListHT(argF2, node212Var);
-    PushToListHT(argF2, node222Var);
+    PushToListHT(argF2, node0Var);
+    PushToListHT(argF2, node2Var);
     PushToListHT(argF2, nodeConstructor2);
     struct Node *f2 = InitApp(node1Var, node1Var);
     struct Node *nodeFunRic2 = InitFRic(var, f2, 3, argF2);
 
-
-    struct Node *r1=WeakCbVEval(nodeFunRic);
-    struct Node *r2=WeakCbVEval(nodeFunRic2);
-    r1->root=True;
-    r2->root=True;
-    PushNeighbour(r1, r2);
+    nodeFunRic->root=True;
+    nodeFunRic2->root=True;
+    PushNeighbour(nodeFunRic, nodeFunRic2);
     DAGCheckAndEval(nodesHT);
     printf("END ------\n\n");
 }
@@ -254,12 +234,12 @@ void TestFunRicNoJTHConstructor() {
     nodesHT = InitListHT();
 
     struct Node *var = InitBVar(NULL);
-    struct Node *node1Var = InitFVar(NULL);
+    struct Node *node1Var = InitFVar();
 
     struct ListHT *argF = InitListHT();
-    struct Node *node0Var = InitFVar(NULL);
-    struct Node *node2Var = InitFVar(NULL);
-    struct Node *node3Var = InitFVar(NULL);
+    struct Node *node0Var = InitFVar();
+    struct Node *node2Var = InitFVar();
+    struct Node *node3Var = InitFVar();
     PushToListHT(argF, node0Var);
     PushToListHT(argF, node2Var);
     PushToListHT(argF, node3Var);
@@ -268,21 +248,15 @@ void TestFunRicNoJTHConstructor() {
     struct Node *nodeFunRic = InitFRic(var, f, 3, argF);
 
     struct ListHT *argF2 = InitListHT();
-    struct Node *node12Var = InitFVar(NULL);
-    struct Node *node22Var = InitFVar(NULL);
-    struct Node *node32Var = InitFVar(NULL);
-    PushToListHT(argF2, node12Var);
-    PushToListHT(argF2, node22Var);
-    PushToListHT(argF2, node32Var);
+    PushToListHT(argF2, node0Var);
+    PushToListHT(argF2, node2Var);
+    PushToListHT(argF2, node3Var);
     struct Node *f2 = InitApp(node1Var, node1Var);
     struct Node *nodeFunRic2 = InitFRic(var, f2, 3, argF2);
 
-
-    struct Node *r1=WeakCbVEval(nodeFunRic);
-    struct Node *r2=WeakCbVEval(nodeFunRic2);
-    r1->root=True;
-    r2->root=True;
-    PushNeighbour(r1, r2);
+    nodeFunRic->root=True;
+    nodeFunRic2->root=True;
+    PushNeighbour(nodeFunRic, nodeFunRic2);
     DAGCheckAndEval(nodesHT);
     printf("END ------\n\n");
 }
@@ -290,20 +264,20 @@ void TestFunRicNoJTHConstructor() {
 void TestFunRicError() {
     printf("START TestFunRicError\n\n");
     nodesHT = InitListHT();
-    struct Node *node1Var = InitFVar(NULL);
+    struct Node *node1Var = InitFVar();
     struct Node *nodeBVar = InitBVar(NULL);
 
     struct Node *var = InitBVar(NULL);
     struct ListHT *arg = InitListHT();
-    struct Node *node11Var = InitFVar(NULL);
-    struct Node *node12Var = InitFVar(NULL);
-    struct Node *node13Var = InitFVar(NULL);
+    struct Node *node11Var = InitFVar();
+    struct Node *node12Var = InitFVar();
+    struct Node *node13Var = InitFVar();
     PushToListHT(arg, node11Var);
     PushToListHT(arg, node12Var);
     PushToListHT(arg, node13Var);
     struct ListHT *argF = InitListHT();
-    struct Node *node0Var = InitFVar(NULL);
-    struct Node *node2Var = InitFVar(NULL);
+    struct Node *node0Var = InitFVar();
+    struct Node *node2Var = InitFVar();
     struct Node *nodeConstructor = InitConstructor(3, arg);
     PushToListHT(argF, node0Var);
     PushToListHT(argF, node2Var);
@@ -312,15 +286,15 @@ void TestFunRicError() {
     struct Node *nodeFunRic = InitFRic(var, f, 3, argF);
 
     struct ListHT *arg2 = InitListHT();
-    struct Node *node112Var = InitFVar(NULL);
-    struct Node *node122Var = InitFVar(NULL);
-    struct Node *node132Var = InitFVar(NULL);
+    struct Node *node112Var = InitFVar();
+    struct Node *node122Var = InitFVar();
+    struct Node *node132Var = InitFVar();
     PushToListHT(arg2, node112Var);
     PushToListHT(arg2, node122Var);
     PushToListHT(arg2, node132Var);
     struct ListHT *argF2 = InitListHT();
-    struct Node *node212Var = InitFVar(NULL);
-    struct Node *node222Var = InitFVar(NULL);
+    struct Node *node212Var = InitFVar();
+    struct Node *node222Var = InitFVar();
     struct Node *nodeConstructor2 = InitConstructor(3, arg2);
     PushToListHT(argF2, node212Var);
     PushToListHT(argF2, node222Var);
@@ -328,12 +302,9 @@ void TestFunRicError() {
     struct Node *f2 = InitLam(nodeBVar, node1Var);
     struct Node *nodeFunRic2 = InitFRic(var, f2, 3, argF2);
 
-
-    struct Node *r1=WeakCbVEval(nodeFunRic);
-    struct Node *r2=WeakCbVEval(nodeFunRic2);
-    r1->root=True;
-    r2->root=True;
-    PushNeighbour(r1, r2);
+    nodeFunRic->root=True;
+    nodeFunRic2->root=True;
+    PushNeighbour(nodeFunRic, nodeFunRic2);
     DAGCheckAndEval(nodesHT);
     printf("END ------\n\n");
 }

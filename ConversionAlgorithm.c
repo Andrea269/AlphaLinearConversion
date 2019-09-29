@@ -2,6 +2,13 @@
 // Created by andrea on 17/07/19.
 //
 
+
+//todo piai propagazione uguale a lamdba... riduzione nulla vado si figli
+
+// todo spostare valu
+
+//todo count
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -18,7 +25,7 @@ enum Bool {
 };
 
 struct NodeFVar {
-    struct Node *var;
+    int var;//dummy
 };
 struct NodeBVar {
     struct Node *binder;//NodeLam or NodeLet or NodeFRic or NodeGCoRic
@@ -134,10 +141,9 @@ void PushParentListHT(struct Node *node, struct ListHT *list) {
 }
 
 /******************************---INIT-NODE---*************************************/
-struct Node *InitFVar(struct Node *var) {
+struct Node *InitFVar() {
     struct Node *node = malloc(sizeof(struct Node));
     node->label = FVar;
-    node->content.fvar.var = var;
     node->canonic = NULL;
     node->copy = NULL;
     node->building = False;
@@ -413,27 +419,178 @@ struct Node *AppReplacement(struct Node *tj, struct ListHT *args) {
     return result;
 }
 
-struct Node *WeakCbVEval(struct Node *n) {//riduzione....
+void UpdateSon(struct Node *oldSon, struct Node *newSon, struct Node *parent) {
+    int find = 0;
+    switch (parent->label) {
+        case FVar:
+            assert(0);
+        case BVar:
+            if (parent->content.bvar.binder == oldSon)
+                parent->content.bvar.binder = newSon;
+            else
+                assert(0);
+            break;
+        case Shared:
+            if (parent->content.shared.body == oldSon)
+                parent->content.shared.body = newSon;
+            else
+                assert(0);
+            break;
+        case App:
+            if (parent->content.app.left == oldSon)
+                parent->content.app.left = newSon;
+            else if (parent->content.app.right == oldSon)
+                parent->content.app.right = newSon;
+            else
+                assert(0);
+            break;
+        case Lam:
+            if (parent->content.lam.body == oldSon)
+                parent->content.lam.body = newSon;
+            else if (parent->content.lam.var == oldSon)
+                parent->content.lam.var = newSon;
+            else
+                assert(0);
+            break;
+        case Match:
+            if (parent->content.match.body == oldSon)
+                parent->content.match.body = newSon;
+            else {
+                if (parent->content.match.branches != NULL) {
+                    struct ListElement *branches = parent->content.match.branches->head;
+                    int i = 0;
+                    while (find == 0 && i < parent->content.match.branches->count) {
+                        if (branches->node == oldSon) {
+                            branches->node = newSon;
+                            find = 1;
+                        }
+                        ++i;
+                        branches = branches->next;
+                    }
+                }
+                if (find == 0)
+                    assert(0);
+            }
+            break;
+        case Let:
+            if (parent->content.let.t3 == oldSon)
+                parent->content.let.t3 = newSon;
+            else if (parent->content.let.t2 == oldSon)
+                parent->content.let.t2 = newSon;
+            else if (parent->content.let.var == oldSon)
+                parent->content.let.var = newSon;
+            else
+                assert(0);
+            break;
+        case FRic:
+            if (parent->content.fRic.t == oldSon)
+                parent->content.fRic.t = newSon;
+            else if (parent->content.fRic.var == oldSon)
+                parent->content.fRic.var = newSon;
+            else {
+                if (parent->content.fRic.arg != NULL) {
+                    struct ListElement *arg = parent->content.fRic.arg->head;
+                    int i = 0;
+                    while (find == 0 && i < parent->content.fRic.arg->count) {
+                        if (arg->node == oldSon) {
+                            arg->node = newSon;
+                            find = 1;
+                        }
+                        ++i;
+                        arg = arg->next;
+                    }
+                }
+                if (find == 0)
+                    assert(0);
+            }
+            break;
+        case GCoRic:
+            if (parent->content.gCoRic.t == oldSon)
+                parent->content.gCoRic.t = newSon;
+            else if (parent->content.gCoRic.var == oldSon)
+                parent->content.gCoRic.var = newSon;
+            else {
+                if (parent->content.gCoRic.arg != NULL) {
+                    struct ListElement *arg = parent->content.gCoRic.arg->head;
+                    int i = 0;
+                    while (find == 0 && i < parent->content.gCoRic.arg->count) {
+                        if (arg->node == oldSon) {
+                            arg->node = newSon;
+                            find = 1;
+                        }
+                        ++i;
+                        arg = arg->next;
+                    }
+                }
+                if (find == 0)
+                    assert(0);
+            }
+            break;
+        case Constructor:
+            if (parent->content.jCostr.arg != NULL) {
+                struct ListElement *arg = parent->content.jCostr.arg->head;
+                int i = 0;
+                while (find == 0 && i < parent->content.jCostr.arg->count) {
+                    if (arg->node == oldSon) {
+                        arg->node = newSon;
+                        find = 1;
+                    }
+                    ++i;
+                    arg = arg->next;
+                }
+            }
+            if (find == 0)
+                assert(0);
+            break;
+        case Constant:
+            if (parent->content.constant.var == oldSon)
+                parent->content.constant.var = newSon;
+            else
+                assert(0);
+            break;
+        default:
+            assert(0);
+
+    }
+}
+
+void RefactoringArcs(struct Node *oldSon, struct Node *newSon) {
+    struct ListElement *parent = oldSon->parentNodes->head;
+    for (int i = 0; i < oldSon->parentNodes->count; ++i) {
+        //aggiorno il nuovo figlio nel genitore
+        UpdateSon(oldSon, newSon, parent->node);
+        //aggiorno i parent del nuovo nodo preservando i vecchi parent
+        PushToListHT(newSon->parentNodes, parent->node);
+        parent = parent->next;
+    }
+}
+
+struct Node *WeakCbVEval(struct Node *n) {//riduzione e aggiornamento archi Padre-Figlio
     printf("Eval Node, Label= %d\n", n->label);
     struct ListElement *listElement;
     struct Node *n1;
     struct Node *n2;
+    struct Node *nodeReturn;
     switch (n->label) {
         case FVar:
             return n;
         case BVar:
             return n;
         case Shared:
-            return n->content.shared.body;
+            nodeReturn = n->content.shared.body;
+
+            RefactoringArcs(n, nodeReturn);
+            return nodeReturn;
         case App:
             n2 = WeakCbVEval(n->content.app.right);
             n1 = WeakCbVEval(n->content.app.left);
-            switch (n1->label) {
-                case Lam:
-                    return WeakCbVEval(Inst(n1->content.lam.body, n1, InitShared(n2)));
-                default:
-                    return InitApp(n1, n2);
-            }
+            if (n1->label == Lam)
+                nodeReturn = WeakCbVEval(Inst(n1->content.lam.body, n1, InitShared(n2)));
+            else
+                nodeReturn = InitApp(n1, n2);
+
+            RefactoringArcs(n, nodeReturn);
+            return nodeReturn;
         case Lam:
             return n;
         case Match:
@@ -446,19 +603,27 @@ struct Node *WeakCbVEval(struct Node *n) {//riduzione....
                     //valuto il ramo j-esimo e poi applico la j
                     n1 = WeakCbVEval(listElement->node);
                     n2 = AppReplacement(n1, n->content.match.body->content.jCostr.arg);
-                    return WeakCbVEval(n2);
+                    nodeReturn = WeakCbVEval(n2);
+                    break;
                 case GCoRic://jDelta-c
                     n1 = Inst(n->content.match.body->content.gCoRic.t, n->content.match.body->content.gCoRic.var,
                               n->content.match.body);
                     n->content.match.body = AppReplacement(n1, n->content.match.body->content.gCoRic.arg);
-                    return WeakCbVEval(n);
+                    nodeReturn = WeakCbVEval(n);
+                    break;
                 default:
                     return n;
             }
+
+            RefactoringArcs(n, nodeReturn);
+            return nodeReturn;
         case Let:
             n->content.let.var->content.bvar.binder = WeakCbVEval(n->content.let.t2);
             n1 = n->content.let.t3;
-            return WeakCbVEval(n1);
+            nodeReturn = WeakCbVEval(n1);
+
+            RefactoringArcs(n, nodeReturn);
+            return nodeReturn;
         case FRic:
             listElement = n->content.fRic.arg->head;
             for (int i = 0; i < n->content.fRic.arg->count - 1; ++i) {
@@ -468,23 +633,59 @@ struct Node *WeakCbVEval(struct Node *n) {//riduzione....
             listElement->node = WeakCbVEval(listElement->node);
             if (listElement->node->label == Constructor) {
                 n1 = Inst(n->content.fRic.t, n->content.fRic.var, n);//b
-                return WeakCbVEval(AppReplacement(n1, n->content.fRic.arg));
+                nodeReturn = WeakCbVEval(AppReplacement(n1, n->content.fRic.arg));
+
+                RefactoringArcs(n, nodeReturn);
+                return nodeReturn;
+            } else {
+                n->content.fRic.t = WeakCbVEval(n->content.fRic.t);
+                return n;
             }
-            n->content.fRic.t = WeakCbVEval(n->content.fRic.t);
-            return n;
         case GCoRic:
             return n;
         case Constructor:
             return n;
         case Constant:
-            return n->content.constant.var;
+            nodeReturn = n->content.constant.var;
+
+            RefactoringArcs(n, nodeReturn);
+            return nodeReturn;
     }
 }
 
 /***************************************---BuildEquivalenceClass---**************************************/
 void PushNeighbour(struct Node *m, struct Node *c) {
-    PushToListHT(m->neighbour, c);
-    PushToListHT(c->neighbour, m);
+
+
+    struct Node *m1 = WeakCbVEval(m);
+    struct Node *c1 = WeakCbVEval(c);
+
+    if(m->root==True)
+        m1->root=True;
+    if(c->root==True)
+        c1->root=True;
+
+    PushToListHT(m1->neighbour, c1);
+    PushToListHT(c1->neighbour, m1);
+}
+
+
+void RecWCEval(struct Node *n) {
+    n->reachable = n->root;
+
+    if (n->parentNodes != NULL) {// visit parents
+        struct ListElement *m = n->parentNodes->head;
+        for (int i = 0; i < n->parentNodes->count; ++i) {
+            if (m->node->visited == False)
+                RecWCEval(m->node);
+            //or logico, False cases the value of n->reachable does't change -- cases True is equivalent to assignment
+            if (m->node->reachable == True)
+                n->reachable = True;
+            m = m->next;
+        }
+    }
+
+    n->visited = True;
 }
 
 /**
@@ -496,35 +697,20 @@ void PushNeighbour(struct Node *m, struct Node *c) {
 void Propagate(struct Node *m, struct Node *c) {//propagazione nodi....
     switch (m->label) {
         case FVar:
-            if (c->label == FVar) {
-                //tali if innestati servono per non avere un NullPointErexception e controllare che i canonici dei binder siano uguali
-                if (m->content.fvar.var != NULL) {
-                    if (c->content.fvar.var == NULL ||
-                        m->content.fvar.var->canonic != c->content.fvar.var->canonic)
-                        PrintExit(3);
-                } else {
-                    if (c->content.fvar.var != NULL)
-                        PrintExit(3);
-                }
-            } else
+            if (m != c)
                 PrintExit(3);
             break;
         case BVar:
             if (c->label == BVar) {
-                //tali if innestati servono per non avere un NullPointErexception e controllare che i canonici dei binder siano uguali
-                if (m->content.bvar.binder != NULL) {
-                    if (c->content.bvar.binder == NULL ||
-                        m->content.bvar.binder->canonic != c->content.bvar.binder->canonic)
-                        PrintExit(3);
-                } else {
-                    if (c->content.bvar.binder != NULL)
-                        PrintExit(3);
-                }
+                assert(m->content.bvar.binder != NULL);
+                assert(c->content.bvar.binder != NULL);
+                if (m->content.bvar.binder->canonic != c->content.bvar.binder->canonic)
+                    PrintExit(3);
             } else
                 PrintExit(3);
             break;
-        case Shared:
-            break; //break or fail???
+        case Shared://un nodo Shared non dovrebbe mai incorrere in questo punto del codice
+            assert(0);
         case App:
             if (c->label == App) {
                 PushNeighbour(m->content.app.left, c->content.app.left);
@@ -552,7 +738,7 @@ void Propagate(struct Node *m, struct Node *c) {//propagazione nodi....
                 PrintExit(3);
             break;
         case Let://un nodo LET non dovrebbe mai incorrere in questo punto del codice
-            PrintExit(3);
+            assert(0);
         case FRic:
             if (c->label == FRic && m->content.fRic.arg->count == c->content.fRic.arg->count) {
                 PushNeighbour(m->content.fRic.t, c->content.fRic.t);
@@ -579,7 +765,7 @@ void Propagate(struct Node *m, struct Node *c) {//propagazione nodi....
             } else
                 PrintExit(3);
             break;
-        case Constructor:
+        case Constructor://j indica quale costruttore è
             if (c->label == Constructor && m->content.jCostr.j == c->content.jCostr.j &&
                 m->content.jCostr.arg->count == c->content.jCostr.arg->count) {
                 struct ListElement *iter = m->content.jCostr.arg->head;
@@ -592,8 +778,8 @@ void Propagate(struct Node *m, struct Node *c) {//propagazione nodi....
             } else
                 PrintExit(3);
             break;
-        case Constant://non dovrebbe propagarsi mai
-            PrintExit(3);
+        case Constant://un nodo Constant non dovrebbe mai incorrere in questo punto del codice
+            assert(0);
     }
 }
 
@@ -603,78 +789,6 @@ void Enqueue(struct Node *n, struct Node *c) {
         n->canonic = c;
     } else if (n->canonic != c)
         PrintExit(2);
-}
-
-void RecWCEval(struct Node *n) {
-    n->reachable = n->root;
-
-    if (n->parentNodes != NULL) {// visit parents
-        struct ListElement *m = n->parentNodes->head;
-        for (int i = 0; i < n->parentNodes->count; ++i) {
-            if (m->node->visited == False)
-                RecWCEval(m->node);
-            //or logico, False cases the value of n->reachable does't change -- cases True is equivalent to assignment
-            if (m->node->reachable == True)
-                n->reachable = m->node->reachable;
-            m = m->next;
-        }
-    }
-
-    if (n->reachable == True) {
-        switch (n->label) {
-            case Lam:
-                n->content.lam.body = WeakCbVEval(n->content.lam.body);
-                PushToListHT(n->content.lam.body->parentNodes, n);
-                break;
-            case Match:
-                n->content.match.body = WeakCbVEval(n->content.match.body);
-                PushToListHT(n->content.match.body->parentNodes, n);
-                if (n->content.match.branches != NULL) {// visit parents
-                    struct ListElement *branches = n->content.match.branches->head;
-                    for (int i = 0; i < n->content.match.branches->count; ++i) {
-                        branches->node = WeakCbVEval(branches->node);
-                        PushToListHT(branches->node->parentNodes, n);
-                        branches = branches->next;
-                    }
-                }
-                break;
-            case FRic:
-                n->content.fRic.t = WeakCbVEval(n->content.fRic.t);
-                PushToListHT(n->content.fRic.t->parentNodes, n);
-                if (n->content.fRic.arg != NULL) {// visit parents
-                    struct ListElement *arg = n->content.fRic.arg->head;
-                    for (int i = 0; i < n->content.fRic.arg->count; ++i) {
-                        arg->node = WeakCbVEval(arg->node);
-                        PushToListHT(arg->node->parentNodes, n);
-                        arg = arg->next;
-                    }
-                }
-                break;
-            case GCoRic:
-                n->content.gCoRic.t = WeakCbVEval(n->content.gCoRic.t);
-                PushToListHT(n->content.gCoRic.t->parentNodes, n);
-                if (n->content.gCoRic.arg != NULL) {// visit parents
-                    struct ListElement *arg = n->content.gCoRic.arg->head;
-                    for (int i = 0; i < n->content.gCoRic.arg->count; ++i) {
-                        arg->node = WeakCbVEval(arg->node);
-                        PushToListHT(arg->node->parentNodes, n);
-                        arg = arg->next;
-                    }
-                }
-                break;
-            case Constructor:
-                if (n->content.jCostr.arg != NULL) {// visit parents
-                    struct ListElement *arg = n->content.jCostr.arg->head;
-                    for (int i = 0; i < n->content.jCostr.arg->count; ++i) {
-                        arg->node = WeakCbVEval(arg->node);
-                        PushToListHT(arg->node->parentNodes, n);
-                        arg = arg->next;
-                    }
-                }
-                break;
-        }
-    }
-    n->visited = True;
 }
 
 void BuildClass(struct Node *c) {
@@ -689,8 +803,7 @@ void BuildClass(struct Node *c) {
         struct Node *n = iterQueue->node;
         RecWCEval(n);
         if (n->reachable == False) {
-            assert(n == c);
-            assert(c->queue->count <= count);
+//todo????            assert(n->neighbour == NULL || n->neighbour->count <= count);
             c->building = False;
             return;
         }
@@ -711,7 +824,8 @@ void BuildClass(struct Node *c) {
                 iterNeighbour = iterNeighbour->next;
             }
         }
-        Propagate(n, c);
+        if (n != c)
+            Propagate(n, c);
         iterQueue = iterQueue->next;
     }
     c->building = False;
