@@ -128,15 +128,15 @@ void PushToListHT(struct ListHT *list, struct Node *prtNode) {
 };
 
 void PushParentListHT(struct Node *node, struct ListHT *list) {
-    struct ListElement *listElement= list->head;
-    while(listElement->node!=NULL) {
+    struct ListElement *listElement = list->head;
+    while (listElement->node != NULL) {
         PushToListHT(listElement->node->parentNodes, node);
         listElement = listElement->next;
     }
 }
 
 /******************************---INIT-NODE---*************************************/
-void InitBase(struct Node *node){
+void InitBase(struct Node *node) {
     node->canonic = NULL;
     node->copy = NULL;
     node->building = False;
@@ -215,7 +215,7 @@ struct Node *InitConstructor(int j, struct ListHT *arg, int n) {
     node->label = Constructor;
     node->content.jCostr.j = j;
     node->content.jCostr.arg = arg;
-    node->content.jCostr.n =n;
+    node->content.jCostr.n = n;
     InitBase(node);
     PushParentListHT(node, arg);
     return node;
@@ -334,7 +334,7 @@ struct Node *Inst(struct Node *n, struct Node *l, struct Node *sub) {
             n->copy = n1;
             n1->content.fRic.t = Inst(n->content.fRic.t, l, sub);
             struct ListElement *iterArgf = n->content.fRic.arg->head;
-            while (iterArgf->node!=NULL){
+            while (iterArgf->node != NULL) {
                 iterArgf->node = Inst(iterArgf->node, l, sub);
                 iterArgf = iterArgf->next;
             }
@@ -345,7 +345,7 @@ struct Node *Inst(struct Node *n, struct Node *l, struct Node *sub) {
             n->copy = n1;
             n1->content.gCoRic.t = Inst(n->content.gCoRic.t, l, sub);
             struct ListElement *iterArgG = n->content.gCoRic.arg->head;
-            while (iterArgG->node!=NULL) {
+            while (iterArgG->node != NULL) {
                 iterArgG->node = Inst(iterArgG->node, l, sub);
                 iterArgG = iterArgG->next;
             }
@@ -354,7 +354,7 @@ struct Node *Inst(struct Node *n, struct Node *l, struct Node *sub) {
         case Constructor:
             n1 = InitConstructor(n->content.jCostr.j, n->content.jCostr.arg, n->content.jCostr.n);
             struct ListElement *iterArgC = n1->content.jCostr.arg->head;
-            while (iterArgC->node!=NULL) {
+            while (iterArgC->node != NULL) {
                 iterArgC->node = Inst(iterArgC->node, l, sub);
                 iterArgC = iterArgC->next;
             }
@@ -367,7 +367,7 @@ struct Node *Inst(struct Node *n, struct Node *l, struct Node *sub) {
 struct Node *AppReplacement(struct Node *tj, struct ListHT *args) {
     struct Node *result = tj;
     struct ListElement *arg = args->head;
-    while (arg->node!=NULL) {
+    while (arg->node != NULL) {
         result = InitApp(result, arg->node);
         arg = arg->next;
     }
@@ -386,7 +386,7 @@ void UpdateSon(struct Node *oldSon, struct Node *newSon, struct Node *parent) {
                 assert(0);
             break;
         case Piai:
-            if (parent->content.piai.body== oldSon)
+            if (parent->content.piai.body == oldSon)
                 parent->content.piai.body = newSon;
             else
                 assert(0);
@@ -417,15 +417,14 @@ void UpdateSon(struct Node *oldSon, struct Node *newSon, struct Node *parent) {
             if (parent->content.match.body == oldSon)
                 parent->content.match.body = newSon;
             else {
-                if (parent->content.match.branches != NULL) {
-                    struct ListElement *branches = parent->content.match.branches->head;
-                    while (find == 0 && branches->node!=NULL) {
-                        if (branches->node == oldSon) {
-                            branches->node = newSon;
-                            find = 1;
-                        }
-                        branches = branches->next;
+                assert(parent->content.match.branches != NULL);
+                struct ListElement *branches = parent->content.match.branches->head;
+                while (find == 0 && branches->node != NULL) {
+                    if (branches->node == oldSon) {
+                        branches->node = newSon;
+                        find = 1;
                     }
+                    branches = branches->next;
                 }
                 if (find == 0)
                     assert(0);
@@ -447,17 +446,16 @@ void UpdateSon(struct Node *oldSon, struct Node *newSon, struct Node *parent) {
             else if (parent->content.fRic.var == oldSon)
                 parent->content.fRic.var = newSon;
             else {
-                if (parent->content.fRic.arg != NULL) {
-                    struct ListElement *arg = parent->content.fRic.arg->head;
-                    int i = 0;
-                    while (find == 0 && arg->node!=NULL) {
-                        if (arg->node == oldSon) {
-                            arg->node = newSon;
-                            find = 1;
-                        }
-                        ++i;
-                        arg = arg->next;
+                assert(parent->content.fRic.arg != NULL);
+                struct ListElement *arg = parent->content.fRic.arg->head;
+                int i = 0;
+                while (find == 0 && arg->node != NULL) {
+                    if (arg->node == oldSon) {
+                        arg->node = newSon;
+                        find = 1;
                     }
+                    ++i;
+                    arg = arg->next;
                 }
                 if (find == 0)
                     assert(0);
@@ -469,30 +467,28 @@ void UpdateSon(struct Node *oldSon, struct Node *newSon, struct Node *parent) {
             else if (parent->content.gCoRic.var == oldSon)
                 parent->content.gCoRic.var = newSon;
             else {
-                if (parent->content.gCoRic.arg != NULL) {
-                    struct ListElement *arg = parent->content.gCoRic.arg->head;
-                    while (arg->node!=NULL){
-                        if (arg->node == oldSon) {
-                            arg->node = newSon;
-                            find = 1;
-                        }
-                        arg = arg->next;
-                    }
-                }
-                if (find == 0)
-                    assert(0);
-            }
-            break;
-        case Constructor:
-            if (parent->content.jCostr.arg != NULL) {
-                struct ListElement *arg = parent->content.jCostr.arg->head;
-                while (find == 0 && arg->node!=NULL) {
+                assert(parent->content.gCoRic.arg != NULL);
+                struct ListElement *arg = parent->content.gCoRic.arg->head;
+                while (arg->node != NULL) {
                     if (arg->node == oldSon) {
                         arg->node = newSon;
                         find = 1;
                     }
                     arg = arg->next;
                 }
+                if (find == 0)
+                    assert(0);
+            }
+            break;
+        case Constructor:
+            assert(parent->content.jCostr.arg != NULL);
+            struct ListElement *arg = parent->content.jCostr.arg->head;
+            while (find == 0 && arg->node != NULL) {
+                if (arg->node == oldSon) {
+                    arg->node = newSon;
+                    find = 1;
+                }
+                arg = arg->next;
             }
             if (find == 0)
                 assert(0);
@@ -511,7 +507,7 @@ void UpdateSon(struct Node *oldSon, struct Node *newSon, struct Node *parent) {
 
 void RefactoringArcs(struct Node *oldSon, struct Node *newSon) {
     struct ListElement *parent = oldSon->parentNodes->head;
-    while (parent->node!=NULL) {
+    while (parent->node != NULL) {
         //aggiorno il nuovo figlio nel genitore
         UpdateSon(oldSon, newSon, parent->node);
         //aggiorno i parent del nuovo nodo preservando i vecchi parent
@@ -624,19 +620,17 @@ void PushNeighbour(struct Node *m, struct Node *c) {
 
 void RecWCEval(struct Node *n) {
     n->reachable = n->root;
-
-    if (n->parentNodes != NULL) {// visit parents
-        struct ListElement *m = n->parentNodes->head;
-        while (m->node!=NULL) {
-            if (m->node->visited == False)
-                RecWCEval(m->node);
-            //or logico, False cases the value of n->reachable does't change -- cases True is equivalent to assignment
-            if (m->node->reachable == True)
-                n->reachable = True;
-            m = m->next;
-        }
+    // visit parents
+    assert(n->parentNodes != NULL);
+    struct ListElement *m = n->parentNodes->head;
+    while (m->node != NULL) {
+        if (m->node->visited == False)
+            RecWCEval(m->node);
+        //or logico, False cases the value of n->reachable does't change -- cases True is equivalent to assignment
+        if (m->node->reachable == True)
+            n->reachable = True;
+        m = m->next;
     }
-
     n->visited = True;
 }
 
@@ -750,7 +744,7 @@ void BuildClass(struct Node *c) {
     c->queue = InitListHT();
     struct ListElement *iterQueue = c->queue->head;
     Enqueue(c, c);
-    while (iterQueue->node!=NULL) {
+    while (iterQueue->node != NULL) {
         struct Node *n = iterQueue->node;
         RecWCEval(n);
         if (n->reachable == False) {
@@ -758,23 +752,24 @@ void BuildClass(struct Node *c) {
             c->building = False;
             return;
         }
-        if (n->parentNodes != NULL) {// visit parents
-            struct ListElement *iterParents = n->parentNodes->head;
-            while (iterParents->node!=NULL) {
-                if (iterParents->node->canonic == NULL)
-                    BuildClass(iterParents->node);
-                else if (iterParents->node->canonic->building == True)
-                    PrintExit(2);
-                iterParents = iterParents->next;
-            }
+        // visit parents
+        assert(n->parentNodes != NULL);
+        struct ListElement *iterParents = n->parentNodes->head;
+        while (iterParents->node != NULL) {
+            if (iterParents->node->canonic == NULL)
+                BuildClass(iterParents->node);
+            else if (iterParents->node->canonic->building == True)
+                PrintExit(2);
+            iterParents = iterParents->next;
         }
-        if (n->neighbour != NULL) {// visit neighbours
-            struct ListElement *iterNeighbour = n->neighbour->head;
-            while (iterNeighbour->node!=NULL){
-                Enqueue(iterNeighbour->node, c);
-                iterNeighbour = iterNeighbour->next;
-            }
+        // visit neighbours
+        assert(n->neighbour != NULL);
+        struct ListElement *iterNeighbour = n->neighbour->head;
+        while (iterNeighbour->node != NULL) {
+            Enqueue(iterNeighbour->node, c);
+            iterNeighbour = iterNeighbour->next;
         }
+
         if (n != c)
             Propagate(n, c);
         iterQueue = iterQueue->next;
@@ -787,7 +782,7 @@ void BuildClass(struct Node *c) {
 void DAGCheckAndEval(struct ListHT *nodesHT) {
     printf("START DAGCheckAndEval\n");
     struct ListElement *nodes = nodesHT->head;
-    while (nodes->node!=NULL) {
+    while (nodes->node != NULL) {
         if (nodes->node->canonic == NULL)
             BuildClass(nodes->node);
         nodes = nodes->next;
