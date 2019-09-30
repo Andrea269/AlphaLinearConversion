@@ -68,10 +68,10 @@ void TestMatchConstructor() {
     PushToListHT(branches2, node1App2);
     PushToListHT(branches2, node2App2);
     PushToListHT(branches2, node3App2);
-    struct Node *nodeConst = InitConstructor(3, arg);
-    struct Node *nodeMatchConst = InitMatch(nodeConst, branches);
-    struct Node *nodeConst2 = InitConstructor(3, arg);
-    struct Node *nodeMatchConst2 = InitMatch(nodeConst2, branches2);
+    struct Node *nodeConst = InitConstructor(2, arg, 3);
+    struct Node *nodeMatchConst = InitMatch(nodeConst, branches, 3);
+    struct Node *nodeConst2 = InitConstructor(2, arg, 3);
+    struct Node *nodeMatchConst2 = InitMatch(nodeConst2, branches2, 3);
 
     nodeMatchConst->root=True;
     nodeMatchConst2->root=True;
@@ -112,10 +112,10 @@ void TestMatchCoRic() {
     PushToListHT(branches2, node3App2);
     struct Node *f = InitApp(node0Var, node0Var);
     struct Node *nodeGcoric=InitGCoRic(var, f, 3, arg);
-    struct Node *nodeMatchGcoric = InitMatch(nodeGcoric, branches);
+    struct Node *nodeMatchGcoric = InitMatch(nodeGcoric, branches, 3);
     struct Node *f2 = InitApp(node0Var, node0Var);
     struct Node *nodeGcoric2=InitGCoRic(var, f2, 3, arg);
-    struct Node *nodeMatchGcoric2 = InitMatch(nodeGcoric2, branches2);
+    struct Node *nodeMatchGcoric2 = InitMatch(nodeGcoric2, branches2, 3);
 
     nodeMatchGcoric->root=True;
     nodeMatchGcoric2->root=True;
@@ -155,11 +155,11 @@ void TestMatchError() {
     PushToListHT(branches2, node1App2);
     PushToListHT(branches2, node2App2);
     PushToListHT(branches2, node3App2);
-    struct Node *nodeConst = InitConstructor(3, arg);
-    struct Node *nodeMatchConst = InitMatch(nodeConst, branches);
+    struct Node *nodeConst = InitConstructor(3, arg, 3);
+    struct Node *nodeMatchConst = InitMatch(nodeConst, branches, 3);
     struct Node *f = InitApp(node0Var, node0Var);
     struct Node *nodeGcoric2=InitGCoRic(var, f, 3, arg);
-    struct Node *nodeMatchGcoric2 = InitMatch(nodeGcoric2, branches2);
+    struct Node *nodeMatchGcoric2 = InitMatch(nodeGcoric2, branches2, 3);
 
     nodeMatchConst->root=True;
     nodeMatchGcoric2->root=True;
@@ -204,7 +204,7 @@ void TestFunRicJTHConstructor() {
     struct ListHT *argF = InitListHT();
     struct Node *node0Var = InitFVar();
     struct Node *node2Var = InitFVar();
-    struct Node *nodeConstructor = InitConstructor(3, arg);
+    struct Node *nodeConstructor = InitConstructor(3, arg, 3);
     PushToListHT(argF, node0Var);
     PushToListHT(argF, node2Var);
     PushToListHT(argF, nodeConstructor);
@@ -216,7 +216,7 @@ void TestFunRicJTHConstructor() {
     PushToListHT(arg2, node12Var);
     PushToListHT(arg2, node13Var);
     struct ListHT *argF2 = InitListHT();
-    struct Node *nodeConstructor2 = InitConstructor(3, arg2);
+    struct Node *nodeConstructor2 = InitConstructor(3, arg2, 3);
     PushToListHT(argF2, node0Var);
     PushToListHT(argF2, node2Var);
     PushToListHT(argF2, nodeConstructor2);
@@ -278,7 +278,7 @@ void TestFunRicError() {
     struct ListHT *argF = InitListHT();
     struct Node *node0Var = InitFVar();
     struct Node *node2Var = InitFVar();
-    struct Node *nodeConstructor = InitConstructor(3, arg);
+    struct Node *nodeConstructor = InitConstructor(3, arg, 3);
     PushToListHT(argF, node0Var);
     PushToListHT(argF, node2Var);
     PushToListHT(argF, nodeConstructor);
@@ -295,7 +295,7 @@ void TestFunRicError() {
     struct ListHT *argF2 = InitListHT();
     struct Node *node212Var = InitFVar();
     struct Node *node222Var = InitFVar();
-    struct Node *nodeConstructor2 = InitConstructor(3, arg2);
+    struct Node *nodeConstructor2 = InitConstructor(3, arg2, 3);
     PushToListHT(argF2, node212Var);
     PushToListHT(argF2, node222Var);
     PushToListHT(argF2, nodeConstructor2);
@@ -332,69 +332,3 @@ int main() {
     printf("\nEND MAIN\n");
     return 0;
 }
-
-//void BasicTest() {
-//    printf("START Test\n\n");
-//    nodesHT = InitListHT();
-//
-//    struct Node *r1=WeakCbVEval(NULL);
-//    struct Node *r2=WeakCbVEval(NULL);
-//    PushNeighbour(r1, r2);
-//    DAGCheckAndEval(nodesHT);
-//    printf("END ------\n\n");
-//}
-
-/**************************************************---PrintListHT---*************************************************/
-//void PrintListHT() {//struct ListHT *listHT
-//    printf("START PrintListHT\n");
-//    int count = nodesHT->count;
-//    printf("Numero nodi %d\n", count);
-//    struct ListElement *nodes = nodesHT->head;
-//
-//    for (int i = 0; i < count; ++i) {
-//        printf("PrintListNode - Nodes\n");
-//        switch (nodes->node->label) {
-//            case FVar:
-//                printf("VarNode -Type Free Var\n");
-//                break;
-//            case BVar:
-//                printf("VarNode -Type Binder Var\n");
-//                break;
-//            case Shared:
-//                printf("VarNode -Type Shared\n");
-//                break;
-//            case App:
-//                printf("AppNode -Type App\n");
-//                printf("CRight -Type %d\n", nodes->node->content.app.right->label);
-//                printf("CLeft -Type %d\n", nodes->node->content.app.left->label);
-//                break;
-//            case Lam:
-//                printf("LamNode -Type Lam\n");
-//                printf("CRight -Type %d\n", nodes->node->content.lam.body->label);
-//                printf("CLeft -Type %d\n", nodes->node->content.lam.var->label);
-//                struct Node *temp = nodes->node->content.lam.var->content.bvar.binder;
-//                printf("binder -Type %d\n", temp->label);
-//                break;
-//            case Match:
-//                printf("MatchNode -Type Match\n");
-//                break;
-//            case Let:
-//                printf("LetNode -Type Let\n");
-//                break;
-//            case FRic:
-//                printf("FRicNode -Type FRic\n");
-//                break;
-//            case GCoRic:
-//                printf("GCoRicNode -Type GCoRic\n");
-//                break;
-//            case Constructor:
-//                printf("ConstructorNode -Type Constructor\n");
-//                break;
-//            case Constant:
-//                printf("ConstantNode -Type Constant\n");
-//                break;
-//        }
-//        nodes = nodes->next;
-//    }
-//    printf("END PrintListHT\n\n");
-//}
