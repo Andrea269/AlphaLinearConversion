@@ -136,9 +136,7 @@ void PushParentListHT(struct Node *node, struct ListHT *list) {
 }
 
 /******************************---INIT-NODE---*************************************/
-struct Node *InitFVar() {
-    struct Node *node = malloc(sizeof(struct Node));
-    node->label = FVar;
+void InitBase(struct Node *node){
     node->canonic = NULL;
     node->copy = NULL;
     node->building = False;
@@ -147,25 +145,20 @@ struct Node *InitFVar() {
     node->parentNodes = InitListHT();
     node->neighbour = InitListHT();
     PushToListHT(nodesHT, node);
+}
+
+struct Node *InitFVar() {
+    struct Node *node = malloc(sizeof(struct Node));
+    node->label = FVar;
+    InitBase(node);
     return node;
 }
 
 struct Node *InitBVar(struct Node *binder) {
-    if (binder != NULL && binder->label != Lam) {
-        printf("Exit InitVar-> error in un nodo Var il nodo binder deve essere un Lam\n");
-        PrintExit(1);
-    }
     struct Node *node = malloc(sizeof(struct Node));
     node->label = BVar;
     node->content.bvar.binder = binder;
-    node->canonic = NULL;
-    node->copy = NULL;
-    node->building = False;
-    node->root = False;
-    node->visited = False;
-    node->parentNodes = InitListHT();
-    node->neighbour = InitListHT();
-    PushToListHT(nodesHT, node);
+    InitBase(node);
     return node;
 }
 
@@ -174,17 +167,10 @@ struct Node *InitPiai(struct Node *var, struct Node *body) {
     node->label = Piai;
     node->content.piai.var = var;
     node->content.piai.body = body;
-    node->canonic = NULL;
-    node->copy = NULL;
-    node->building = False;
-    node->root = False;
-    node->visited = False;
-    node->parentNodes = InitListHT();
-    node->neighbour = InitListHT();
+    InitBase(node);
     var->content.bvar.binder = node;
     PushToListHT(var->parentNodes, node);
     PushToListHT(body->parentNodes, node);
-    PushToListHT(nodesHT, node);
     return node;
 }
 
@@ -192,14 +178,8 @@ struct Node *InitShared(struct Node *body) {
     struct Node *node = malloc(sizeof(struct Node));
     node->label = Shared;
     node->content.shared.body = body;
-    node->canonic = NULL;
-    node->copy = NULL;
-    node->building = False;
-    node->root = False;
-    node->visited = False;
-    node->parentNodes = InitListHT();
-    node->neighbour = InitListHT();
-    PushToListHT(nodesHT, node);
+    //todo... inserire??? PushToListHT(body->parentNodes, node);
+    InitBase(node);
     return node;
 }
 
@@ -208,16 +188,9 @@ struct Node *InitApp(struct Node *left, struct Node *right) {
     node->label = App;
     node->content.app.left = left;
     node->content.app.right = right;
-    node->canonic = NULL;
-    node->copy = NULL;
-    node->building = False;
-    node->root = False;
-    node->visited = False;
-    node->parentNodes = InitListHT();
-    node->neighbour = InitListHT();
+    InitBase(node);
     PushToListHT(left->parentNodes, node);
     PushToListHT(right->parentNodes, node);
-    PushToListHT(nodesHT, node);
     return node;
 }
 
@@ -230,17 +203,10 @@ struct Node *InitLam(struct Node *var, struct Node *body) {
     node->label = Lam;
     node->content.lam.var = var;
     node->content.lam.body = body;
-    node->canonic = NULL;
-    node->copy = NULL;
-    node->building = False;
-    node->root = False;
-    node->visited = False;
-    node->parentNodes = InitListHT();
-    node->neighbour = InitListHT();
+    InitBase(node);
     var->content.bvar.binder = node;
     PushToListHT(var->parentNodes, node);
     PushToListHT(body->parentNodes, node);
-    PushToListHT(nodesHT, node);
     return node;
 }
 
@@ -250,15 +216,8 @@ struct Node *InitConstructor(int j, struct ListHT *arg, int n) {
     node->content.jCostr.j = j;
     node->content.jCostr.arg = arg;
     node->content.jCostr.n =n;
-    node->canonic = NULL;
-    node->copy = NULL;
-    node->building = False;
-    node->root = False;
-    node->visited = False;
-    node->parentNodes = InitListHT();
-    node->neighbour = InitListHT();
+    InitBase(node);
     PushParentListHT(node, arg);
-    PushToListHT(nodesHT, node);
     return node;
 }
 
@@ -273,16 +232,11 @@ struct Node *InitFRic(struct Node *var, struct Node *body, int n, struct ListHT 
     node->content.fRic.t = body;
     node->content.fRic.n = n;
     node->content.fRic.arg = arg;
-    node->canonic = NULL;
-    node->copy = NULL;
-    node->building = False;
-    node->root = False;
-    node->visited = False;
-    node->parentNodes = InitListHT();
-    node->neighbour = InitListHT();
+    InitBase(node);
     var->content.bvar.binder = node;
+    PushToListHT(var->parentNodes, node);
+    PushToListHT(body->parentNodes, node);
     PushParentListHT(node, arg);
-    PushToListHT(nodesHT, node);
     return node;
 }
 
@@ -293,15 +247,10 @@ struct Node *InitGCoRic(struct Node *var, struct Node *body, int n, struct ListH
     node->content.gCoRic.t = body;
     node->content.gCoRic.n = n;
     node->content.gCoRic.arg = arg;
-    node->canonic = NULL;
-    node->copy = NULL;
-    node->building = False;
-    node->root = False;
-    node->visited = False;
-    node->parentNodes = InitListHT();
-    node->neighbour = InitListHT();
+    InitBase(node);
+    PushToListHT(var->parentNodes, node);
+    PushToListHT(body->parentNodes, node);
     PushParentListHT(node, arg);
-    PushToListHT(nodesHT, node);
     return node;
 }
 
@@ -312,21 +261,12 @@ struct Node *InitMatch(struct Node *body, struct ListHT *branches, int n) {
     }
     struct Node *node = malloc(sizeof(struct Node));
     node->label = Match;
-//    node->content.match.i = i;
-//    node->content.match.t0 = t0;
     node->content.match.body = body;
     node->content.match.branches = branches;
     node->content.match.n = n;
-    node->canonic = NULL;
-    node->copy = NULL;
-    node->building = False;
-    node->root = False;
-    node->visited = False;
-    node->parentNodes = InitListHT();
-    node->neighbour = InitListHT();
-    PushParentListHT(node, branches);
+    InitBase(node);
     PushToListHT(body->parentNodes, node);
-    PushToListHT(nodesHT, node);
+    PushParentListHT(node, branches);
     return node;
 }
 
@@ -338,21 +278,13 @@ struct Node *InitLet(struct Node *var, struct Node *t2, struct Node *t3) {
     struct Node *node = malloc(sizeof(struct Node));
     node->label = Let;
     node->content.let.var = var;
-//    node->content.let.t1 = t1;
     node->content.let.t2 = t2;
     node->content.let.t3 = t3;
-    node->canonic = NULL;
-    node->copy = NULL;
-    node->building = False;
-    node->root = False;
-    node->visited = False;
-    node->parentNodes = InitListHT();
-    node->neighbour = InitListHT();
+    InitBase(node);
     var->content.bvar.binder = node;
     PushToListHT(var->parentNodes, node);
     PushToListHT(t2->parentNodes, node);
     PushToListHT(t3->parentNodes, node);
-    PushToListHT(nodesHT, node);
     return node;
 }
 
