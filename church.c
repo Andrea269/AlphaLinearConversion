@@ -52,10 +52,11 @@ Node mk_term(int n) {
 int main(){
     nodesHT = InitListHT();
     printf("START Test Church Numerals n=%d \n\n", N);
-    PushNeighbour(
-        WeakCbVEval(mk_term(N)),
-        WeakCbVEval(mk_id())
-    );
+    Node m=mk_term(N);
+    m->root=True;
+    Node c=mk_id();
+    c->root=True;
+    PushNeighbour(m, c);
     DAGCheckAndEval(nodesHT);
     printf("END ------\n\n");
     return 0;
