@@ -8,56 +8,52 @@
 
 #include "ConversionAlgorithm.c"
 
-typedef struct Node* Node;
+typedef Node* PNode;
 
-Node num(int n) {
+PNode num(int n) {
     // Crea numerali di Church
     // num(n) == \ab. a^n(b)
-    Node a = InitBVar(NULL);
-    Node b = InitBVar(NULL);
-    Node body = b;
+    PNode a = InitBVar(NULL);
+    PNode b = InitBVar(NULL);
+    PNode body = b;
     for(int i=0; i<n; i++) {
         body = InitApp(a, body);
     }
-    Node absb = InitLam(b, body);
-    Node absa = InitLam(a, absb);
+    PNode absb = InitLam(b, body);
+    PNode absa = InitLam(a, absb);
     return absa;
 }
 
-Node mk_id() {
+PNode mk_id() {
     // Crea identita' \x.x
-    Node x = InitBVar(NULL);
-    Node abs = InitLam(x, x);
+    PNode x = InitBVar(NULL);
+    PNode abs = InitLam(x, x);
     return abs;
 }
 
-Node mk_apps(Node head, Node* args) {
+PNode mk_apps(PNode head, PNode* args) {
     // Crea un'applicazione iterata
-    // Uso: mk_apps(head, (Node[]){arg1,arg2,...,NULL});
+    // Uso: mk_apps(head, (PNode[]){arg1,arg2,...,NULL});
     while(*args) {
-        Node arg = *args++;
+        PNode arg = *args++;
         head = InitApp(head, arg);
     }
     return head;
 }
 
-Node mk_term(int n) {
+PNode mk_term(int n) {
     // Crea termine da testare
-    Node noden = num(n);
-    Node two = num(2);
-    Node id = mk_id();
-    return mk_apps(noden, (Node[]){two,id,id,NULL});
+    PNode noden = num(n);
+    PNode two = num(2);
+    PNode id = mk_id();
+    return mk_apps(noden, (PNode[]){two,id,id,NULL});
 }
 
 int main(){
     nodesHT = InitListHT();
     printf("START Test Church Numerals n=%d \n\n", N);
-    Node m=mk_term(N);
-    m->root=True;
-    Node c=mk_id();
-    c->root=True;
-    PushNeighbour(m, c);
-    DAGCheckAndEval(nodesHT);
+
+    DAGCheckAndEval(nodesHT, mk_term(N), mk_id());
     printf("END ------\n\n");
     return 0;
 }
