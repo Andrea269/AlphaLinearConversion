@@ -1,6 +1,9 @@
 //
 // Created by andrea on 17/07/19.
 //
+// graphviz come pacchetto
+// gcc -o main main.c && ./main ; dot -Tpdf graph.dot > graph.pdf && evince graph.pdf
+//
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -106,6 +109,82 @@ struct List {
     ListItem *tail;
 };
 
+/*****************************---PRINTING ---************************************/
+const char* print_label(enum TypeNode l) {
+   switch(l) {
+      case FVar: return "v";
+      case BVar: return "b";
+      case Piai: return "pi";
+      case Shared: return "";
+      case App: return "@";
+      case Lam: return "\\\\";
+      case Match: return "match";
+      case Let: return "let";
+      case FRic: return "fix";
+      case GCoRic: return "cofix";
+      case Constructor: return "k";
+      case Constant: return "c";
+   }
+}
+void print_node(FILE *f, Node *n) {
+    fprintf(f,"%d [label=\"%s\" ordering=\"out\"];\n", (long)n, print_label(n->label));
+    ListItem *listElement = n->parentNodes->head;
+    while (listElement->node != NULL) {
+        fprintf(f,"%d -> %d;\n",(long)listElement->node,(long)n);
+        listElement = listElement->next;
+    }
+    listElement = n->neighbour->head;
+    while (listElement->node != NULL) {
+        fprintf(f,"%d -> %d [style=\"dotted\" constraint=\"false\"];\n",(long)listElement->node,(long)n);
+        listElement = listElement->next;
+    }
+    if(n->root == True) fprintf(f,"%d [shape=\"square\"];\n",(long)n);
+/*
+struct Node {
+    enum TypeNode label;
+    union {
+        struct NodeFVar fvar;
+        struct NodeBVar bvar;
+        struct NodePiai piai;
+        struct NodeShared shared;
+        struct NodeApp app;
+        struct NodeLam lam;
+        struct NodeMatch match;
+        struct NodeFRic fRic;
+        struct NodeGCoRic gCoRic;
+        struct NodeLet let;
+        struct NodeJthConstr jCostr;
+        struct NodeConst constant;
+    } content;
+    Node *canonic;
+    Node *copy;
+    Bool building;
+    List *parentNodes;
+    List *neighbour;
+    List *queue;
+    Bool root;
+    Bool reachable;
+    Bool visited;
+};
+*/
+}
+
+void print_graph(List *l, Node *focus) {
+    fprintf(stderr,"----- new graph -----\n");
+    FILE *f = fopen("graph.dot","w");
+    fprintf(f,"digraph G {\n");
+    ListItem *listElement = l->head;
+    while (listElement->node != NULL) {
+        print_node(f,listElement->node);
+        listElement = listElement->next;
+    }
+    if(focus != NULL) fprintf(f,"%d [color=\"red\"];\n", (long)focus);
+    fprintf(f,"}\n");
+    fclose(f);
+    system("dot -Tpdf graph.dot > graph.pdf");
+    getchar();
+}
+
 /*****************************---USEFUL FUNCTIONS---************************************/
 void PrintExit(int error) {
     printf("\nFail: Process finished with exit code %d\n", error);
@@ -115,6 +194,8 @@ void PrintExit(int error) {
 List *InitListHT() {
     List *list = malloc(sizeof(List));
     ListItem *elementList = malloc(sizeof(ListItem));
+    elementList->node = NULL;
+    elementList->next = NULL;
     list->head = elementList;
     list->tail = elementList;
     return list;
@@ -122,10 +203,30 @@ List *InitListHT() {
 
 void PushToListHT(List *list, Node *prtNode) {
     ListItem *elementList = malloc(sizeof(ListItem));
+    elementList->node = NULL;
+    elementList->next = NULL;
     list->tail->node = prtNode;
     list->tail->next = elementList;
     list->tail = list->tail->next;// setto la nuova coda
 };
+
+void RemoveHT(List *list, Node *prtNode) {
+    ListItem *listElement = list->head;
+    ListItem *prev = NULL;
+    while (listElement->node != NULL) {
+        if(listElement->node == prtNode) {
+           if(prev != NULL) {
+              prev->next = listElement->next;
+           } else {
+              list->head = listElement->next;
+           }
+           break;
+        } else {
+           prev = listElement;
+           listElement = listElement->next;
+        }
+    }
+}
 
 void PushParentListHT(Node *node, List *list) {
     ListItem *listElement = list->head;
@@ -185,14 +286,24 @@ Node *InitShared(Node *body) {
 }
 
 Node *InitApp(Node *left, Node *right) {
-    Node *node = malloc(sizeof(Node));
-    node->label = App;
-    node->content.app.left = left;
-    node->content.app.right = right;
-    InitBase(node);
-    PushToListHT(left->parentNodes, node);
-    PushToListHT(right->parentNodes, node);
-    return node;
+    Node *node;
+    switch(left->label) {
+     case FRic:
+       PushToListHT(left->content.fRic.arg,right);
+       break;
+     case GCoRic:
+       PushToListHT(left->content.gCoRic.arg,right);
+       break;
+     default:
+       node = malloc(sizeof(Node));
+       node->label = App;
+       node->content.app.left = left;
+       node->content.app.right = right;
+       InitBase(node);
+       PushToListHT(left->parentNodes, node);
+       PushToListHT(right->parentNodes, node);
+       return node;
+    }
 }
 
 Node *InitLam(Node *var, Node *body) {
@@ -520,6 +631,8 @@ void RefactoringNode(Node *oldNode, Node *newNode) {
         PushToListHT(newNode->parentNodes, parent->node);
         parent = parent->next;
     }
+    RemoveHT(nodesHT,oldNode);
+    free(oldNode);
 }
 
 Node *WeakCbVEval(Node *n) {//riduzione e aggiornamento archi Padre-Figlio
@@ -543,13 +656,15 @@ Node *WeakCbVEval(Node *n) {//riduzione e aggiornamento archi Padre-Figlio
         case App:
             n2 = WeakCbVEval(n->content.app.right);
             n1 = WeakCbVEval(n->content.app.left);
-            if (n1->label == Lam)
+            if (n1->label == Lam) {
                 nodeReturn = WeakCbVEval(Inst(n1->content.lam.body, n1, InitShared(n2)));
-            else
-                nodeReturn = InitApp(n1, n2);
+                RemoveHT(n1->parentNodes,n);
+                RemoveHT(n2->parentNodes,n);
+                RefactoringNode(n, nodeReturn);
+                return nodeReturn;
+            } else
+                return n;
 
-            RefactoringNode(n, nodeReturn);
-            return nodeReturn;
         case Lam:
             return n;
         case Match:
@@ -559,23 +674,36 @@ Node *WeakCbVEval(Node *n) {//riduzione e aggiornamento archi Padre-Figlio
                     for (int i = 0; i < n->content.match.body->content.jCostr.n - 1; ++i) {
                         listElement = listElement->next;
                     }
-                    //valuto il ramo n-esimo e poi applico la j
-                    n1 = WeakCbVEval(listElement->node);
-                    n2 = AppReplacement(n1, n->content.match.body->content.jCostr.arg);
+                    //applico il ramo n-esimo agli argomenti del costruttore
+                    n2 = AppReplacement(listElement->node, n->content.match.body->content.jCostr.arg);
                     nodeReturn = WeakCbVEval(n2);
-                    break;
+                    RemoveHT(n->content.match.body->parentNodes,n);
+                    listElement = n->content.match.branches->head;
+                    while (listElement->node != NULL) {
+                        RemoveHT(listElement->node->parentNodes,n);
+                        listElement = listElement->next;
+                    }
+                    RefactoringNode(n, nodeReturn);
+                    return nodeReturn;
                 case GCoRic://jDelta-c
                     n1 = Inst(n->content.match.body->content.gCoRic.t, n->content.match.body->content.gCoRic.var,
-                              n->content.match.body);
-                    n->content.match.body = AppReplacement(n1, n->content.match.body->content.gCoRic.arg);
+                              InitShared(InitGCoRic(n->content.match.body->content.gCoRic.var,n->content.match.body->content.gCoRic.t,0,InitListHT())));
+                    n2 = AppReplacement(n1, n->content.match.body->content.gCoRic.arg);
+                    RemoveHT(n->content.match.body->content.gCoRic.t->parentNodes,n->content.match.body);
+                    RemoveHT(n->content.match.body->content.gCoRic.var->parentNodes,n->content.match.body);
+                    listElement = n->content.match.body->content.gCoRic.arg->head;
+                    while (listElement->node != NULL) {
+                        RemoveHT(listElement->node->parentNodes,n->content.match.body);
+                        listElement = listElement->next;
+                    }
+                    RefactoringNode(n->content.match.body, n2);
+                    n->content.match.body = n2;
                     nodeReturn = WeakCbVEval(n);
-                    break;
+                    return nodeReturn;
                 default:
                     return n;
             }
 
-            RefactoringNode(n, nodeReturn);
-            return nodeReturn;
         case Let:
             n->content.let.var->content.bvar.binder = WeakCbVEval(n->content.let.t2);
             n1 = n->content.let.t3;
@@ -615,10 +743,13 @@ Node *WeakCbVEval(Node *n) {//riduzione e aggiornamento archi Padre-Figlio
 /***************************************---BuildEquivalenceClass---**************************************/
 void PushNeighbour(Node *m, Node *c) {
     Node *m1 = WeakCbVEval(m);
+    print_graph(nodesHT,m1);
     Node *c1 = WeakCbVEval(c);
+    print_graph(nodesHT,c1);
 
     PushToListHT(m1->neighbour, c1);
     PushToListHT(c1->neighbour, m1);
+    print_graph(nodesHT,NULL);
 }
 
 
@@ -753,7 +884,7 @@ void BuildClass(Node *c) {
         Node *n = iterQueue->node;
         RecWCEval(n);
         if (n->reachable == False) {
-//todo????    assert(n->neighbour->head->node == NULL);
+            assert(n->neighbour->head->node == NULL);
             c->building = False;
             return;
         }
@@ -788,6 +919,7 @@ void DAGCheckAndEval(List *nodesHT, Node *root1, Node *root2) {
     printf("START DAGCheckAndEval\n");
     root1->root = True;
     root2->root = True;
+    print_graph(nodesHT,NULL);
     PushNeighbour(root1, root2);
     printf("START WWWWWWWWWW\n");
     ListItem *nodes = nodesHT->head;

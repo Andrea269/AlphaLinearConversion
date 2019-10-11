@@ -8,14 +8,14 @@ void TestAppCorrect() {
     nodesHT = InitListHT();
     struct Node *node1Var = InitFVarId(1);
     struct Node *node2Var = InitFVarId(2);
-    struct Node *node1App = InitApp(node1Var, node2Var);
     struct Node *node3Var = InitBVar(NULL);
-    struct Node *node1Lam = InitLam(node3Var, node1App);
-    struct Node *node11App = InitApp(node1Var, node2Var);
+    struct Node *node1Lam = InitLam(node3Var, node1Var);
     struct Node *node4Var = InitBVar(NULL);
-    struct Node *node11Lam = InitLam(node4Var, node11App);
+    struct Node *node11Lam = InitLam(node4Var, node1Var);
+    struct Node *node1App = InitApp(node1Lam, node2Var);
+    struct Node *node11App = InitApp(node11Lam, node2Var);
 
-    DAGCheckAndEval(nodesHT, node1Lam, node11Lam);
+    DAGCheckAndEval(nodesHT, node1App, node11App);
     printf("END ------\n\n");
 }
 void TestAppError() {
