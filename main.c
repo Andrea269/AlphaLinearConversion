@@ -291,17 +291,17 @@ int main() {
     printf("START MAIN\n\n");
 
     //Test sottostanti devono terminare con la fine del programma e non con errore
-//    TestAppCorrect();
-//    TestMatchConstructor();
-//    TestMatchCoRic();
-//    TestLet();
-//    TestFunRicJTHConstructor();
-//
-//    TestFunRicNoJTHConstructor();
+    TestAppCorrect();
+    TestMatchConstructor();
+    TestMatchCoRic();
+    TestLet();
+    TestFunRicJTHConstructor();
+
+    TestFunRicNoJTHConstructor();
 
 
     //Test sottostanti è giusto che terminano con un errore, sarebbe errato altrimenti
-    TestFunRicError();
+//    TestFunRicError();
 //    TestAppError();
 //    TestMatchError();
     printf("\nEND MAIN\n");

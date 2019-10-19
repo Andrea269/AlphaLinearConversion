@@ -30,7 +30,7 @@ struct NodeFVar {
 struct NodeBVar {
     Node *binder;//NodeLam or NodeLet or NodeFRic or NodeGCoRic
 };
-struct NodePiai {//piai propagazione uguale a lamdba... riduzione nulla vado sui figli
+struct NodePiai {
     Node *var;
     Node *body;
 };
@@ -167,7 +167,7 @@ void print_graph(List *l, Node *focus) {
     fprintf(f, "digraph G {\n");
     ListItem *listElement = l->head;
     while (listElement->node != NULL) {
-        if (listElement->node->rc > 0 || listElement->node->root==True)//todo
+        if (listElement->node->rc > 0 || listElement->node->root==True)
             print_node(f, listElement->node);
         listElement = listElement->next;
     }
@@ -630,6 +630,8 @@ void UpdateSon(Node *oldSon, Node *newSon, Node *parent) {
     }
 }
 
+/*Aggiorna il RC del nodo passato in input, rimuove il parent dalla sua lista di genitori
+ * Se il nodo non ha più alcun riferimento effettua una chiamata mutuamente ricorsiva alla funzione FreeRC*/
 void RefactoringSon(Node *node, Node *parent){
     node->rc--;
     RemoveHT(node->parentNodes, parent);
@@ -637,6 +639,8 @@ void RefactoringSon(Node *node, Node *parent){
         FreeRC(node);
 }
 
+/*Rimuove il nodo passato in input dalla lista globale e libera la memoria occupata da tale nodo
+ * Prima di liberare la memoria invoca la funzione RefactoringSon su tutti i figli del nodo*/
 void FreeRC(Node *node) {
     RemoveHT(nodesHT, node);
     ListItem *listElement;
@@ -644,7 +648,6 @@ void FreeRC(Node *node) {
         case FVar:
             break;
         case BVar:
-//            RefactoringSon(node->content.bvar.binder, node);//todo
             break;
         case Piai:
             RefactoringSon(node->content.piai.var, node);
@@ -741,8 +744,6 @@ Node *WeakCbVEval(Node *n) {//riduzione e aggiornamento archi Padre-Figlio
             return n;
         case Shared:
             nodeReturn = n->content.shared.body;
-
-            //RemoveHT(nodeReturn->parentNodes, n);
             RefactoringNode(n, nodeReturn);
             return nodeReturn;
         case App:
@@ -750,8 +751,6 @@ Node *WeakCbVEval(Node *n) {//riduzione e aggiornamento archi Padre-Figlio
             n1 = WeakCbVEval(n->content.app.left);
             if (n1->label == Lam) {
                 nodeReturn = WeakCbVEval(Inst(n1->content.lam.body, n1, n2));
-                //RemoveHT(n1->parentNodes, n);
-                //RemoveHT(n2->parentNodes, n);
                 RefactoringNode(n, nodeReturn);
                 return nodeReturn;
             } else
@@ -768,12 +767,6 @@ Node *WeakCbVEval(Node *n) {//riduzione e aggiornamento archi Padre-Figlio
                     //applico il ramo n-esimo agli argomenti del costruttore
                     n2 = AppReplacement(listElement->node, n->content.match.body->content.jCostr.arg);
                     nodeReturn = WeakCbVEval(n2);
-//                    RemoveHT(n->content.match.body->parentNodes, n);
-//                    listElement = n->content.match.branches->head;
-//                    while (listElement->node != NULL) {
-//                        RemoveHT(listElement->node->parentNodes, n);
-//                        listElement = listElement->next;
-//                    }
                     RefactoringNode(n, nodeReturn);
                     return nodeReturn;
                 case GCoRic://jDelta-c
@@ -782,13 +775,6 @@ Node *WeakCbVEval(Node *n) {//riduzione e aggiornamento archi Padre-Figlio
                     if(!(n1->label==Shared && n1->content.shared.body==n2))
                         FreeRC(n2);
                     n2 = AppReplacement(n1, n->content.match.body->content.gCoRic.arg);
-//                    RemoveHT(n->content.match.body->content.gCoRic.t->parentNodes, n->content.match.body);
-//                    RemoveHT(n->content.match.body->content.gCoRic.var->parentNodes, n->content.match.body);
-//                    listElement = n->content.match.body->content.gCoRic.arg->head;
-//                    while (listElement->node != NULL) {
-//                        RemoveHT(listElement->node->parentNodes, n->content.match.body);
-//                        listElement = listElement->next;
-//                    }
                     RefactoringNode(n->content.match.body, n2);
                     n->content.match.body = n2;
                     nodeReturn = WeakCbVEval(n);
@@ -801,10 +787,6 @@ Node *WeakCbVEval(Node *n) {//riduzione e aggiornamento archi Padre-Figlio
             n->content.let.var->content.bvar.binder = WeakCbVEval(n->content.let.t2);//todo esempio grafico binder non valuta sotto quindi? Modifico regola?
             n->content.let.var->content.bvar.binder->rc++;
             nodeReturn = WeakCbVEval(n->content.let.t3);
-
-//            RemoveHT(n->content.let.t3->parentNodes, n);
-//            RemoveHT(n->content.let.t2->parentNodes, n);
-//            RemoveHT(n->content.let.var->parentNodes, n);
             RefactoringNode(n, nodeReturn);
             return nodeReturn;
         case FRic:
@@ -817,16 +799,6 @@ Node *WeakCbVEval(Node *n) {//riduzione e aggiornamento archi Padre-Figlio
             if (listElement->node->label == Constructor) {
                 n1 = Inst(n->content.fRic.t, n->content.fRic.var, n);//b
                 nodeReturn = WeakCbVEval(AppReplacement(n1, n->content.fRic.arg));
-
-
-//                RemoveHT(n->content.fRic.t->parentNodes, n);
-//                RemoveHT(n->content.fRic.var->parentNodes, n);
-//                n->content.fRic.var->content.bvar.binder = NULL;
-//                listElement = n->content.fRic.arg->head;
-//                while (listElement->node != NULL) {
-//                    RemoveHT(listElement->node->parentNodes, n);
-//                    listElement = listElement->next;
-//                }
                 RefactoringNode(n, nodeReturn);
                 return nodeReturn;
             } else {
@@ -839,8 +811,6 @@ Node *WeakCbVEval(Node *n) {//riduzione e aggiornamento archi Padre-Figlio
             return n;
         case Constant:
             nodeReturn = n->content.constant.var;
-
-//            RemoveHT(nodeReturn->parentNodes, n);
             RefactoringNode(n, nodeReturn);
             return nodeReturn;
     }
