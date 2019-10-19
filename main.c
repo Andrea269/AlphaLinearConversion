@@ -7,13 +7,14 @@ void TestAppCorrect() {
     printf("START TestAppCorrect\n\n");
     nodesHT = InitListHT();
     struct Node *node1Var = InitFVarId(1);
-    struct Node *node2Var = InitFVarId(2);
-    struct Node *node3Var = InitBVar(NULL);
-    struct Node *node1Lam = InitLam(node3Var, node1Var);
-    struct Node *node4Var = InitBVar(NULL);
-    struct Node *node11Lam = InitLam(node4Var, node1Var);
-    struct Node *node1App = InitApp(node1Lam, node2Var);
-    struct Node *node11App = InitApp(node11Lam, node2Var);
+    struct Node *node1BVar = InitBVar(NULL);
+    struct Node *nodeApp1 = InitApp(node1BVar, node1BVar);
+    struct Node *node1Lam = InitLam(node1BVar, nodeApp1);
+    struct Node *node2BVar = InitBVar(NULL);
+    struct Node *nodeApp2 = InitApp(node2BVar, node2BVar);
+    struct Node *node11Lam = InitLam(node2BVar, nodeApp2);
+    struct Node *node1App = InitApp(node1Lam, node1Var);
+    struct Node *node11App = InitApp(node11Lam, node1Var);
 
     DAGCheckAndEval(nodesHT, node1App, node11App);
     printf("END ------\n\n");
@@ -290,15 +291,17 @@ int main() {
     printf("START MAIN\n\n");
 
     //Test sottostanti devono terminare con la fine del programma e non con errore
-    TestAppCorrect();
-    TestMatchConstructor();
-    TestMatchCoRic();
-    TestLet();
-    TestFunRicNoJTHConstructor();
-    TestFunRicJTHConstructor();
+//    TestAppCorrect();
+//    TestMatchConstructor();
+//    TestMatchCoRic();
+//    TestLet();
+//    TestFunRicJTHConstructor();
+//
+//    TestFunRicNoJTHConstructor();
+
 
     //Test sottostanti è giusto che terminano con un errore, sarebbe errato altrimenti
-//    TestFunRicError();
+    TestFunRicError();
 //    TestAppError();
 //    TestMatchError();
     printf("\nEND MAIN\n");
