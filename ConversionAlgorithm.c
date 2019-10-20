@@ -111,7 +111,7 @@ struct List {
     ListItem *tail;
 };
 
-void FreeRC(Node *node) ;
+void FreeRC(Node *node);
 
 /*****************************---PRINTING ---************************************/
 const char *print_label(enum TypeNode l) {
@@ -167,7 +167,7 @@ void print_graph(List *l, Node *focus) {
     fprintf(f, "digraph G {\n");
     ListItem *listElement = l->head;
     while (listElement->node != NULL) {
-        if (listElement->node->rc > 0 || listElement->node->root==True)
+        if (listElement->node->rc > 0 || listElement->node->root == True)
             print_node(f, listElement->node);
         listElement = listElement->next;
     }
@@ -368,6 +368,7 @@ Node *InitGCoRic(Node *var, Node *body, int n, List *arg) {
     node->content.gCoRic.n = n;
     node->content.gCoRic.arg = arg;
     InitBase(node);
+    var->content.bvar.binder = node;
     PushToListHT(var->parentNodes, node);
     PushToListHT(body->parentNodes, node);
     PushParentListHT(node, arg);
@@ -414,8 +415,13 @@ Node *InitLet(Node *var, Node *t2, Node *t3) {
 
 
 /*************************************---EVALUATE---*****************************************/
+void RefactoringNode(Node *oldNode, Node *newNode);
+
 Node *Inst(Node *n, Node *l, Node *sub) {
     Node *n1;
+    Node *temp;
+    ListItem *iterList;
+    struct List *arg = InitListHT();
     switch (n->label) {
         case FVar:
             return n;
@@ -431,7 +437,14 @@ Node *Inst(Node *n, Node *l, Node *sub) {
         case Piai:
             n1 = InitPiai(InitBVar(NULL), n->content.piai.body);
             n->copy = n1;
-            n1->content.piai.body = Inst(n->content.piai.body, l, sub);
+            temp = n1->content.piai.body;
+            n1->content.piai.body = Inst(temp, l, sub);
+            if (temp != n1->content.piai.body) {
+                PushToListHT(n1->content.piai.body->parentNodes, n1);
+                n1->content.piai.body->rc++;
+                RemoveHT(temp->parentNodes, n1);
+                temp->rc--;
+            }
             n->copy = NULL;
             return n1;
         case Shared:
@@ -441,7 +454,15 @@ Node *Inst(Node *n, Node *l, Node *sub) {
         case Lam:
             n1 = InitLam(InitBVar(NULL), n->content.lam.body);
             n->copy = n1;
-            n1->content.lam.body = Inst(n->content.lam.body, l, sub);
+
+            temp = n1->content.lam.body;
+            n1->content.lam.body = Inst(temp, l, sub);
+            if (temp != n1->content.lam.body) {
+                PushToListHT(n1->content.lam.body->parentNodes, n1);
+                n1->content.lam.body->rc++;
+                RemoveHT(temp->parentNodes, n1);
+                temp->rc--;
+            }
             n->copy = NULL;
             return n1;
         case Match:
@@ -449,38 +470,103 @@ Node *Inst(Node *n, Node *l, Node *sub) {
         case Let:
             n1 = InitLet(InitBVar(NULL), n->content.let.t2, n->content.let.t3);
             n->copy = n1;
-            n1->content.let.t2 = Inst(n->content.let.t2, l, sub);
-            n1->content.let.t3 = Inst(n->content.let.t3, l, sub);
+            temp = n1->content.let.t2;
+            n1->content.let.t2 = Inst(temp, l, sub);
+            if (temp != n1->content.let.t2) {
+                PushToListHT(n1->content.let.t2->parentNodes, n1);
+                n1->content.let.t2->rc++;
+                RemoveHT(temp->parentNodes, n1);
+                temp->rc--;
+            }
+            temp = n1->content.let.t3;
+            n1->content.let.t3 = Inst(temp, l, sub);
+            if (temp != n1->content.let.t3) {
+                PushToListHT(n1->content.let.t3->parentNodes, n1);
+                n1->content.let.t3->rc++;
+                RemoveHT(temp->parentNodes, n1);
+                temp->rc--;
+            }
             n->copy = NULL;
             return n1;
         case FRic:
-            n1 = InitFRic(InitBVar(NULL), n->content.fRic.t, n->content.fRic.n, n->content.fRic.arg);
+            iterList = n->content.fRic.arg->head;
+            while (iterList->node != NULL) {
+                PushToListHT(arg, iterList->node);
+                iterList = iterList->next;
+            }
+
+            n1 = InitFRic(InitBVar(NULL), n->content.fRic.t, n->content.fRic.n, arg);
             n->copy = n1;
-            n1->content.fRic.t = Inst(n->content.fRic.t, l, sub);
-            ListItem *iterArgf = n->content.fRic.arg->head;
-            while (iterArgf->node != NULL) {
-                iterArgf->node = Inst(iterArgf->node, l, sub);
-                iterArgf = iterArgf->next;
+            temp = n1->content.fRic.t;
+            n1->content.fRic.t = Inst(temp, l, sub);
+            if (temp != n1->content.fRic.t) {
+                PushToListHT(n1->content.fRic.t->parentNodes, n1);
+                n1->content.fRic.t->rc++;
+                RemoveHT(temp->parentNodes, n1);
+                temp->rc--;
+            }
+            iterList = n1->content.fRic.arg->head;
+            while (iterList->node != NULL) {
+                temp = iterList->node;
+                iterList->node = Inst(temp, l, sub);
+                if (temp != iterList->node) {
+                    PushToListHT(iterList->node->parentNodes, n1);
+                    iterList->node->rc++;
+                    RemoveHT(temp->parentNodes, n1);
+                    temp->rc--;
+                }
+                iterList = iterList->next;
             }
             n->copy = NULL;
             return n1;
         case GCoRic:
-            n1 = InitGCoRic(InitBVar(NULL), n->content.gCoRic.t, n->content.gCoRic.n, n->content.gCoRic.arg);
+            iterList = n->content.gCoRic.arg->head;
+            while (iterList->node != NULL) {
+                PushToListHT(arg, iterList->node);
+                iterList = iterList->next;
+            }
+            n1 = InitGCoRic(InitBVar(NULL), n->content.gCoRic.t, n->content.gCoRic.n, arg);
             n->copy = n1;
-            n1->content.gCoRic.t = Inst(n->content.gCoRic.t, l, sub);
-            ListItem *iterArgG = n->content.gCoRic.arg->head;
-            while (iterArgG->node != NULL) {
-                iterArgG->node = Inst(iterArgG->node, l, sub);
-                iterArgG = iterArgG->next;
+            temp = n1->content.gCoRic.t;
+            n1->content.gCoRic.t = Inst(temp, l, sub);
+            if (temp != n1->content.gCoRic.t) {
+                PushToListHT(n1->content.gCoRic.t->parentNodes, n1);
+                n1->content.gCoRic.t->rc++;
+                RemoveHT(temp->parentNodes, n1);
+                temp->rc--;
+            }
+            iterList = n1->content.gCoRic.arg->head;
+            while (iterList->node != NULL) {
+                temp = iterList->node;
+                iterList->node = Inst(temp, l, sub);
+                if (temp != iterList->node) {
+                    PushToListHT(iterList->node->parentNodes, n1);
+                    iterList->node->rc++;
+                    RemoveHT(temp->parentNodes, n1);
+                    temp->rc--;
+                }
+                iterList = iterList->next;
             }
             n->copy = NULL;
             return n1;
         case Constructor:
-            n1 = InitConstructor(n->content.jCostr.j, n->content.jCostr.arg, n->content.jCostr.n);
-            ListItem *iterArgC = n1->content.jCostr.arg->head;
-            while (iterArgC->node != NULL) {
-                iterArgC->node = Inst(iterArgC->node, l, sub);
-                iterArgC = iterArgC->next;
+            iterList = n->content.jCostr.arg->head;
+            while (iterList->node != NULL) {
+                PushToListHT(arg, iterList->node);
+                iterList = iterList->next;
+            }
+            n1 = InitConstructor(n->content.jCostr.j, arg, n->content.jCostr.n);
+            iterList = n1->content.jCostr.arg->head;
+            while (iterList->node != NULL) {
+                temp = iterList->node;
+                iterList->node = Inst(temp, l, sub);
+                if (temp != iterList->node) {
+                    PushToListHT(iterList->node->parentNodes, n1);
+                    iterList->node->rc++;
+                    RemoveHT(temp->parentNodes, n1);
+                    temp->rc--;
+                }
+                iterList = iterList->next;
             }
             return n1;
         case Constant:
@@ -632,10 +718,10 @@ void UpdateSon(Node *oldSon, Node *newSon, Node *parent) {
 
 /*Aggiorna il RC del nodo passato in input, rimuove il parent dalla sua lista di genitori
  * Se il nodo non ha più alcun riferimento effettua una chiamata mutuamente ricorsiva alla funzione FreeRC*/
-void RefactoringSon(Node *node, Node *parent){
+void RefactoringSon(Node *node, Node *parent) {
     node->rc--;
     RemoveHT(node->parentNodes, parent);
-    if(node->root==False && node->rc<1)
+    if (node->root == False && node->rc < 1)
         FreeRC(node);
 }
 
@@ -713,9 +799,9 @@ void FreeRC(Node *node) {
 void RefactoringNode(Node *oldNode, Node *newNode) {
     newNode->root = oldNode->root;
     newNode->reachable = oldNode->reachable;
-    assert(oldNode->building == False);
-    assert(oldNode->canonic == NULL);
-    assert(oldNode->visited == False);
+//    assert(oldNode->building == False);
+//    assert(oldNode->canonic == NULL);
+//    assert(oldNode->visited == False);
 
     ListItem *parent = oldNode->parentNodes->head;
     while (parent->node != NULL) {
@@ -770,12 +856,13 @@ Node *WeakCbVEval(Node *n) {//riduzione e aggiornamento archi Padre-Figlio
                     RefactoringNode(n, nodeReturn);
                     return nodeReturn;
                 case GCoRic://jDelta-c
-                    n2=InitGCoRic(n->content.match.body->content.gCoRic.var, n->content.match.body->content.gCoRic.t, 0, InitListHT());
+                    n2 = InitGCoRic(n->content.match.body->content.gCoRic.var, n->content.match.body->content.gCoRic.t,
+                                    0, InitListHT());
                     n1 = Inst(n->content.match.body->content.gCoRic.t, n->content.match.body->content.gCoRic.var, n2);
-                    if(!(n1->label==Shared && n1->content.shared.body==n2))
+                    if (!(n1->label == Shared && n1->content.shared.body == n2))
                         FreeRC(n2);
                     n2 = AppReplacement(n1, n->content.match.body->content.gCoRic.arg);
-                    RefactoringNode(n->content.match.body, n2);
+                    RefactoringNode(n->content.match.body, n2);//todo
                     n->content.match.body = n2;
                     nodeReturn = WeakCbVEval(n);
                     return nodeReturn;
@@ -784,7 +871,8 @@ Node *WeakCbVEval(Node *n) {//riduzione e aggiornamento archi Padre-Figlio
             }
 
         case Let:
-            n->content.let.var->content.bvar.binder = WeakCbVEval(n->content.let.t2);//todo esempio grafico binder non valuta sotto quindi? Modifico regola?
+            n->content.let.var->content.bvar.binder = WeakCbVEval(
+                    n->content.let.t2);//todo esempio grafico binder non valuta sotto quindi? Modifico regola?
             n->content.let.var->content.bvar.binder->rc++;
             nodeReturn = WeakCbVEval(n->content.let.t3);
             RefactoringNode(n, nodeReturn);

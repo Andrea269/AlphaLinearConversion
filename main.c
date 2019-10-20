@@ -2,6 +2,7 @@
 // Created by andrea on 13/05/19.
 //
 #include "ConversionAlgorithm.c"
+
 /**************************************************---TEST---*************************************************/
 void TestAppCorrect() {
     printf("START TestAppCorrect\n\n");
@@ -19,6 +20,7 @@ void TestAppCorrect() {
     DAGCheckAndEval(nodesHT, node1App, node11App);
     printf("END ------\n\n");
 }
+
 void TestAppError() {
     printf("START TestAppError\n\n");
     nodesHT = InitListHT();
@@ -34,6 +36,7 @@ void TestAppError() {
     DAGCheckAndEval(nodesHT, node1Lam, node11Lam);
     printf("END ------\n\n");
 }
+
 void TestMatchConstructor() {
     printf("START TestMatchConstructor\n\n");
     nodesHT = InitListHT();
@@ -47,7 +50,7 @@ void TestMatchConstructor() {
     struct Node *node1Var = InitBVar(NULL);
     struct Node *node2Var = InitFVarId(4);
     struct Node *node3Var = InitFVarId(5);
-    struct List *branches =  InitListHT();
+    struct List *branches = InitListHT();
     struct Node *node1Lam = InitLam(node1Var, node2Var);
     struct Node *node1App = InitApp(node1Lam, node2Var);
     struct Node *node2App = InitApp(node2Var, node2Var);
@@ -71,10 +74,10 @@ void TestMatchConstructor() {
     DAGCheckAndEval(nodesHT, nodeMatchConst, nodeMatchConst2);
     printf("END ------\n\n");
 }
+
 void TestMatchCoRic() {
     printf("START TestMatchCoRic\n\n");
     nodesHT = InitListHT();
-    struct Node *var = InitBVar(NULL);
     struct Node *node0Var = InitFVarId(1);
     struct List *arg = InitListHT();
     struct Node *node11Var = InitFVarId(2);
@@ -83,11 +86,12 @@ void TestMatchCoRic() {
     PushToListHT(arg, node11Var);
     PushToListHT(arg, node12Var);
     PushToListHT(arg, node13Var);
-    struct Node *node1Var = InitBVar(NULL);
+    struct Node *nodeBVar1 = InitBVar(NULL);
+    struct Node *nodeBVar2 = InitBVar(NULL);
     struct Node *node2Var = InitFVarId(5);
     struct Node *node3Var = InitFVarId(6);
     struct List *branches = InitListHT();
-    struct Node *node1Lam = InitLam(node1Var, node2Var);
+    struct Node *node1Lam = InitLam(nodeBVar1, node2Var);
     struct Node *node1App = InitApp(node1Lam, node2Var);
     struct Node *node2App = InitApp(node2Var, node2Var);
     struct Node *node3App = InitApp(node1Lam, node3Var);
@@ -95,23 +99,26 @@ void TestMatchCoRic() {
     PushToListHT(branches, node2App);
     PushToListHT(branches, node3App);
     struct List *branches2 = InitListHT();
-    struct Node *node1Lam2 = InitLam(node1Var, node2Var);
+    struct Node *node1Lam2 = InitLam(nodeBVar2, node2Var);
     struct Node *node1App2 = InitApp(node1Lam2, node2Var);
     struct Node *node2App2 = InitApp(node2Var, node2Var);
     struct Node *node3App2 = InitApp(node1Lam2, node3Var);
     PushToListHT(branches2, node1App2);
     PushToListHT(branches2, node2App2);
     PushToListHT(branches2, node3App2);
+    struct Node *var = InitBVar(NULL);
+    struct Node *var2 = InitBVar(NULL);
     struct Node *f = InitApp(node0Var, node0Var);
-    struct Node *nodeGcoric=InitGCoRic(var, f, 3, arg);
+    struct Node *nodeGcoric = InitGCoRic(var, f, 3, arg);
     struct Node *nodeMatchGcoric = InitMatch(nodeGcoric, branches, 3);
     struct Node *f2 = InitApp(node0Var, node0Var);
-    struct Node *nodeGcoric2=InitGCoRic(var, f2, 3, arg);
+    struct Node *nodeGcoric2 = InitGCoRic(var2, f2, 3, arg);
     struct Node *nodeMatchGcoric2 = InitMatch(nodeGcoric2, branches2, 3);
 
     DAGCheckAndEval(nodesHT, nodeMatchGcoric, nodeMatchGcoric2);
     printf("END ------\n\n");
 }
+
 void TestMatchError() {
     printf("START TestMatchError\n\n");
     nodesHT = InitListHT();
@@ -146,7 +153,7 @@ void TestMatchError() {
     struct Node *nodeConst = InitConstructor(3, arg, 3);
     struct Node *nodeMatchConst = InitMatch(nodeConst, branches, 3);
     struct Node *f = InitApp(node0Var, node0Var);
-    struct Node *nodeGcoric2=InitGCoRic(var, f, 3, arg);
+    struct Node *nodeGcoric2 = InitGCoRic(var, f, 3, arg);
     struct Node *nodeMatchGcoric2 = InitMatch(nodeGcoric2, branches2, 3);
 
     DAGCheckAndEval(nodesHT, nodeMatchConst, nodeMatchGcoric2);
@@ -176,6 +183,7 @@ void TestFunRicJTHConstructor() {
     struct Node *node1Var = InitFVarId(1);
 
     struct Node *var = InitBVar(NULL);
+    struct Node *var2 = InitBVar(NULL);
     struct List *arg = InitListHT();
     struct Node *node11Var = InitFVarId(2);
     struct Node *node12Var = InitFVarId(3);
@@ -203,11 +211,12 @@ void TestFunRicJTHConstructor() {
     PushToListHT(argF2, node2Var);
     PushToListHT(argF2, nodeConstructor2);
     struct Node *f2 = InitApp(node1Var, node1Var);
-    struct Node *nodeFunRic2 = InitFRic(var, f2, 3, argF2);
+    struct Node *nodeFunRic2 = InitFRic(var2, f2, 3, argF2);
 
     DAGCheckAndEval(nodesHT, nodeFunRic, nodeFunRic2);
     printf("END ------\n\n");
 }
+
 void TestFunRicNoJTHConstructor() {
     printf("START TestFunRicNoJTHConstructor\n\n");
     nodesHT = InitListHT();
@@ -281,6 +290,248 @@ void TestFunRicError() {
     DAGCheckAndEval(nodesHT, nodeFunRic, nodeFunRic2);
     printf("END ------\n\n");
 }
+
+
+void TestFunRicJTHConstructorNoRoot() {
+    printf("START TestFunRicJTHConstructor\n\n");
+    nodesHT = InitListHT();
+    struct Node *node1Var = InitFVarId(1);
+
+    struct Node *var = InitBVar(NULL);
+    struct Node *var2 = InitBVar(NULL);
+    struct List *arg = InitListHT();
+    struct Node *node11Var = InitFVarId(2);
+    struct Node *node12Var = InitFVarId(3);
+    struct Node *node13Var = InitFVarId(4);
+    PushToListHT(arg, node11Var);
+    PushToListHT(arg, node12Var);
+    PushToListHT(arg, node13Var);
+    struct List *argF = InitListHT();
+    struct Node *node0Var = InitFVarId(5);
+    struct Node *node2Var = InitFVarId(6);
+    struct Node *nodeConstructor = InitConstructor(3, arg, 3);
+    PushToListHT(argF, node0Var);
+    PushToListHT(argF, node2Var);
+    PushToListHT(argF, nodeConstructor);
+    struct Node *f = InitApp(node1Var, node1Var);
+    struct Node *nodeFunRic = InitFRic(var, f, 3, argF);
+
+    struct List *arg2 = InitListHT();
+    PushToListHT(arg2, node11Var);
+    PushToListHT(arg2, node12Var);
+    PushToListHT(arg2, node13Var);
+    struct List *argF2 = InitListHT();
+    struct Node *nodeConstructor2 = InitConstructor(3, arg2, 3);
+    PushToListHT(argF2, node0Var);
+    PushToListHT(argF2, node2Var);
+    PushToListHT(argF2, nodeConstructor2);
+    struct Node *f2 = InitApp(node1Var, node1Var);
+    struct Node *nodeFunRic2 = InitFRic(var2, f2, 3, argF2);
+
+
+    struct Node *varB = InitBVar(NULL);
+    struct Node *varB2 = InitBVar(NULL);
+    struct Node *nodeLam = InitLam(varB, nodeFunRic);
+    struct Node *node2Lam = InitLam(varB2, nodeFunRic2);
+
+    DAGCheckAndEval(nodesHT, nodeLam, node2Lam);
+    printf("END ------\n\n");
+}
+
+
+void TestCoRicRoot() {
+    printf("START TestMatchCoRic\n\n");
+    nodesHT = InitListHT();
+
+    struct Node *node1Var = InitFVarId(1);
+
+    struct Node *var = InitBVar(NULL);
+    struct Node *var2 = InitBVar(NULL);
+    struct List *arg = InitListHT();
+    struct Node *node11Var = InitFVarId(2);
+    struct Node *node12Var = InitFVarId(3);
+    struct Node *node13Var = InitFVarId(4);
+    PushToListHT(arg, node11Var);
+    PushToListHT(arg, node12Var);
+    PushToListHT(arg, node13Var);
+    struct List *argF = InitListHT();
+    struct Node *node0Var = InitFVarId(5);
+    struct Node *node2Var = InitFVarId(6);
+    struct Node *nodeConstructor = InitConstructor(3, arg, 3);
+    PushToListHT(argF, node0Var);
+    PushToListHT(argF, node2Var);
+    PushToListHT(argF, nodeConstructor);
+    struct Node *f = InitApp(node1Var, node1Var);
+    struct Node *nodeFunRic = InitFRic(var, f, 3, argF);
+
+    struct List *arg2 = InitListHT();
+    PushToListHT(arg2, node11Var);
+    PushToListHT(arg2, node12Var);
+    PushToListHT(arg2, node13Var);
+    struct List *argF2 = InitListHT();
+    struct Node *nodeConstructor2 = InitConstructor(3, arg2, 3);
+    PushToListHT(argF2, node0Var);
+    PushToListHT(argF2, node2Var);
+    PushToListHT(argF2, nodeConstructor2);
+    struct Node *f2 = InitApp(node1Var, node1Var);
+    struct Node *nodeFunRic2 = InitFRic(var2, f2, 3, argF2);
+
+
+    struct Node *varBG = InitBVar(NULL);
+    struct List *argG = InitListHT();
+    struct Node *nodeVarArg1 = InitFVarId(2);
+    struct Node *nodeVarArg2 = InitFVarId(3);
+    struct Node *nodeVarArg3 = InitFVarId(4);
+    PushToListHT(argG, nodeVarArg1);
+    PushToListHT(argG, nodeVarArg2);
+    PushToListHT(argG, nodeVarArg3);
+
+
+    struct Node *nodeGcoric = InitGCoRic(varBG, nodeFunRic, 3, argG);
+
+    struct Node *nodeGcoric2 = InitGCoRic(varBG, nodeFunRic2, 3, argG);
+
+
+    DAGCheckAndEval(nodesHT, nodeGcoric, nodeGcoric2);
+    printf("END ------\n\n");
+}
+
+
+void TestCoRicNoRootReduce() {
+    printf("START TestMatchCoRic\n\n");
+    nodesHT = InitListHT();
+
+    struct Node *node1Var = InitFVarId(1);
+
+    struct Node *var = InitBVar(NULL);
+    struct Node *var2 = InitBVar(NULL);
+    struct List *arg = InitListHT();
+    struct Node *node11Var = InitFVarId(2);
+    struct Node *node12Var = InitFVarId(3);
+    struct Node *node13Var = InitFVarId(4);
+    PushToListHT(arg, node11Var);
+    PushToListHT(arg, node12Var);
+    PushToListHT(arg, node13Var);
+    struct List *argF = InitListHT();
+    struct Node *node0Var = InitFVarId(5);
+    struct Node *node2Var = InitFVarId(6);
+    struct Node *nodeConstructor = InitConstructor(3, arg, 3);
+    PushToListHT(argF, node0Var);
+    PushToListHT(argF, node2Var);
+    PushToListHT(argF, nodeConstructor);
+    struct Node *f = InitApp(node1Var, node1Var);
+    struct Node *nodeFunRic = InitFRic(var, f, 3, argF);
+
+    struct List *arg2 = InitListHT();
+    PushToListHT(arg2, node11Var);
+    PushToListHT(arg2, node12Var);
+    PushToListHT(arg2, node13Var);
+    struct List *argF2 = InitListHT();
+    struct Node *nodeConstructor2 = InitConstructor(3, arg2, 3);
+    PushToListHT(argF2, node0Var);
+    PushToListHT(argF2, node2Var);
+    PushToListHT(argF2, nodeConstructor2);
+    struct Node *f2 = InitApp(node1Var, node1Var);
+    struct Node *nodeFunRic2 = InitFRic(var2, f2, 3, argF2);
+
+
+    struct Node *varBG = InitBVar(NULL);
+    struct Node *varBG2 = InitBVar(NULL);
+    struct List *argG = InitListHT();
+    struct Node *nodeVarArg1 = InitFVarId(2);
+    struct Node *nodeVarArg2 = InitFVarId(3);
+    struct Node *nodeVarArg3 = InitFVarId(4);
+    PushToListHT(argG, nodeVarArg1);
+    PushToListHT(argG, nodeVarArg2);
+    PushToListHT(argG, nodeVarArg3);
+//    PushToListHT(argG, nodeFunRic);
+
+
+    struct Node *nodeGcoric = InitGCoRic(varBG, nodeFunRic, 3, argG);
+
+    struct Node *nodeGcoric2 = InitGCoRic(varBG2, nodeFunRic2, 3, argG);
+
+
+    struct Node *nodeVar1 = InitFVarId(1);
+    struct Node *node1BVar = InitBVar(NULL);
+    struct Node *node1Lam = InitLam(node1BVar, nodeGcoric);
+    struct Node *node2BVar = InitBVar(NULL);
+    struct Node *node11Lam = InitLam(node2BVar, nodeGcoric2);
+    struct Node *node1App = InitApp(node1Lam, nodeVar1);
+    struct Node *node11App = InitApp(node11Lam, nodeVar1);
+
+
+    DAGCheckAndEval(nodesHT, node1App, node11App);
+    printf("END ------\n\n");
+}
+
+
+void TestCoRicNoRootNoReduce() {
+    printf("START TestMatchCoRic\n\n");
+    nodesHT = InitListHT();
+
+    struct Node *node1Var = InitFVarId(1);
+
+    struct Node *var = InitBVar(NULL);
+    struct Node *var2 = InitBVar(NULL);
+    struct List *arg = InitListHT();
+    struct Node *node11Var = InitFVarId(2);
+    struct Node *node12Var = InitFVarId(3);
+    struct Node *node13Var = InitFVarId(4);
+    PushToListHT(arg, node11Var);
+    PushToListHT(arg, node12Var);
+    PushToListHT(arg, node13Var);
+    struct List *argF = InitListHT();
+    struct Node *node0Var = InitFVarId(5);
+    struct Node *node2Var = InitFVarId(6);
+    struct Node *nodeConstructor = InitConstructor(3, arg, 3);
+    PushToListHT(argF, node0Var);
+    PushToListHT(argF, node2Var);
+    PushToListHT(argF, nodeConstructor);
+    struct Node *f = InitApp(node1Var, node1Var);
+    struct Node *nodeFunRic = InitFRic(var, f, 3, argF);
+
+    struct List *arg2 = InitListHT();
+    PushToListHT(arg2, node11Var);
+    PushToListHT(arg2, node12Var);
+    PushToListHT(arg2, node13Var);
+    struct List *argF2 = InitListHT();
+    struct Node *nodeConstructor2 = InitConstructor(3, arg2, 3);
+    PushToListHT(argF2, node0Var);
+    PushToListHT(argF2, node2Var);
+    PushToListHT(argF2, nodeConstructor2);
+    struct Node *f2 = InitApp(node1Var, node1Var);
+    struct Node *nodeFunRic2 = InitFRic(var2, f2, 3, argF2);
+
+
+    struct Node *varBG = InitBVar(NULL);
+    struct List *argG = InitListHT();
+    struct Node *nodeVarArg1 = InitFVarId(2);
+    struct Node *nodeVarArg2 = InitFVarId(3);
+    struct Node *nodeVarArg3 = InitFVarId(4);
+    PushToListHT(argG, nodeVarArg1);
+    PushToListHT(argG, nodeVarArg2);
+    PushToListHT(argG, nodeVarArg3);
+
+
+    struct Node *nodeGcoric = InitGCoRic(varBG, nodeFunRic, 3, argG);
+
+    struct Node *nodeGcoric2 = InitGCoRic(varBG, nodeFunRic2, 3, argG);
+
+
+    struct Node *nodeVar1 = InitFVarId(1);
+    struct Node *node1BVar = InitBVar(NULL);
+    struct Node *node1Lam = InitLam(node1BVar, nodeGcoric);
+    struct Node *node2BVar = InitBVar(NULL);
+    struct Node *node11Lam = InitLam(node2BVar, nodeGcoric2);
+    struct Node *node1App = InitApp(nodeVar1, node1Lam);
+    struct Node *node11App = InitApp(nodeVar1, node11Lam);
+
+
+    DAGCheckAndEval(nodesHT, node1App, node11App);
+    printf("END ------\n\n");
+}
+
 /***********************************---MAIN-TEST---***********************************
  * @return  0-> Successfully completed
  *          1-> ERROR: Exit in InitNode
@@ -298,6 +549,23 @@ int main() {
     TestFunRicJTHConstructor();
 
     TestFunRicNoJTHConstructor();
+
+    TestFunRicJTHConstructorNoRoot();
+    TestCoRicRoot();
+    TestCoRicNoRootNoReduce();
+    TestCoRicNoRootReduce();
+
+/* todo assert in RefactoringNode fail --> test elencati di seguito
+ *
+    TestFunRicJTHConstructorNoRoot();
+    TestCoRicRoot();
+    TestCoRicNoRootNoReduce();
+    TestCoRicNoRootReduce();
+ *
+ * avviene quando un nodo o la radice non riduce sui figli
+ * ovvero nei casi dove WeakCbVEval non è ricorsiva esempio coFix o Lambda
+*/
+
 
 
     //Test sottostanti è giusto che terminano con un errore, sarebbe errato altrimenti
