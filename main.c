@@ -555,7 +555,7 @@ int main() {
     TestCoRicNoRootNoReduce();
     TestCoRicNoRootReduce();
 
-/* todo assert in RefactoringNode fail --> test elencati di seguito
+/* todo assert in RefactoringNode 798 fail --> test elencati di seguito
  *
     TestFunRicJTHConstructorNoRoot();
     TestCoRicRoot();

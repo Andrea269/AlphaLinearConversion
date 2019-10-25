@@ -5,6 +5,7 @@
 // gcc -o main main.c && ./main ; dot -Tpdf graph.dot > graph.pdf
 // && evince graph.pdf
 //
+// gcc -o church church.c && ./church ; dot -Tpdf graph.dot > graph.pdf
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -415,8 +416,6 @@ Node *InitLet(Node *var, Node *t2, Node *t3) {
 
 
 /*************************************---EVALUATE---*****************************************/
-void RefactoringNode(Node *oldNode, Node *newNode);
-
 Node *Inst(Node *n, Node *l, Node *sub) {
     Node *n1;
     Node *temp;
