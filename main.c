@@ -293,7 +293,7 @@ void TestFunRicError() {
 
 
 void TestFunRicJTHConstructorNoRoot() {
-    printf("START TestFunRicJTHConstructor\n\n");
+    printf("START TestFunRicJTHConstructorNoRoot\n\n");
     nodesHT = InitListHT();
     struct Node *node1Var = InitFVarId(1);
 
@@ -532,39 +532,87 @@ void TestCoRicNoRootNoReduce() {
     printf("END ------\n\n");
 }
 
+void Test() {
+    printf("START Test\n\n");
+    nodesHT = InitListHT();
+    struct Node *node1Var = InitFVarId(1);
+    struct Node *node1BVar = InitBVar(NULL);
+    struct Node *nodeApp1 = InitApp(node1BVar, node1BVar);
+    struct Node *node1Lam = InitLam(node1BVar, nodeApp1);
+    struct Node *node2BVar = InitBVar(NULL);
+    struct Node *nodeApp2 = InitApp(node2BVar, node2BVar);
+    struct Node *nodeSH = InitShared(nodeApp2);
+    struct Node *node11Lam = InitLam(node2BVar, nodeSH);
+    struct Node *root1 = InitApp(node1Lam, node1Var);
+    struct Node *root2 = InitApp(node11Lam, node1Var);
+
+    DAGCheckAndEval(nodesHT, root1, root2);
+    printf("END ------\n\n");
+}
+
+void TestFunRicJTHConstructorRid() {
+    printf("START TestFunRicJTHConstructor\n\n");
+    nodesHT = InitListHT();
+
+    struct Node *node1Var = InitFVarId(1);
+    struct Node *err = InitFVarId(1);
+
+    struct Node *var = InitBVar(NULL);
+//    struct Node *var2 = InitBVar(NULL);
+    struct List *arg = InitListHT();
+    struct Node *node11Var = InitFVarId(2);
+    struct Node *node12Var = InitFVarId(3);
+    struct Node *node13Var = InitFVarId(4);
+    PushToListHT(arg, node11Var);
+    PushToListHT(arg, node12Var);
+    PushToListHT(arg, node13Var);
+    struct List *argF = InitListHT();
+    struct Node *node0Var = InitFVarId(5);
+    struct Node *node2Var = InitFVarId(6);
+    struct Node *nodeConstructor = InitConstructor(3, arg, 3);
+    PushToListHT(argF, node0Var);
+    PushToListHT(argF, node2Var);
+    PushToListHT(argF, nodeConstructor);
+    struct Node *f = InitApp(node1Var, node1Var);
+    struct Node *nodeFunRic = InitFRic(var, f, 3, argF);
+    struct Node *nodeFunRaaaic = InitFRic(var, f, 3, argF);
+
+    struct Node *app1 = InitApp(node1Var, node1Var);
+    struct Node *app2 = InitApp(app1, node0Var);
+    struct Node *app3 = InitApp(app2, node2Var);
+    struct Node *app4 = InitApp(app3, nodeConstructor);
+
+    struct Node *nodeSH = InitShared(nodeFunRic);
+    struct Node *nodeSH2 = InitShared(app4);
+    DAGCheckAndEval(nodesHT, nodeSH, nodeSH2);
+
+//    DAGCheckAndEval(nodesHT, nodeFunRic, app4);
+    printf("END ------\n\n");
+}
 /***********************************---MAIN-TEST---***********************************
  * @return  0-> Successfully completed
  *          1-> ERROR: Exit in InitNode
  *          2-> ERROR: Exit in BuildClass
  *          3-> ERROR: Exit in Propagate
-*/
+ *          4-> ERROR: Exit in BuildClass
+ *          134 -> ERROR: Exit with assert(0) (interrupted by signal 6: SIGABRT)*/
 int main() {
     printf("START MAIN\n\n");
-
     //Test sottostanti devono terminare con la fine del programma e non con errore
+
+    mod=0;
+
+
+    Test();
     TestAppCorrect();
     TestMatchConstructor();
     TestMatchCoRic();
     TestLet();
     TestFunRicJTHConstructor();
-
     TestFunRicNoJTHConstructor();
 
-    TestFunRicJTHConstructorNoRoot();
-    TestCoRicRoot();
-    TestCoRicNoRootNoReduce();
-    TestCoRicNoRootReduce();
+    TestFunRicJTHConstructorRid();
 
-/* todo assert in RefactoringNode 798 fail --> test elencati di seguito
- *
-    TestFunRicJTHConstructorNoRoot();
-    TestCoRicRoot();
-    TestCoRicNoRootNoReduce();
-    TestCoRicNoRootReduce();
- *
- * avviene quando un nodo o la radice non riduce sui figli
- * ovvero nei casi dove WeakCbVEval non è ricorsiva esempio coFix o Lambda
-*/
 
 
 
