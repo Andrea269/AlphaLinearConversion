@@ -600,12 +600,10 @@ int main() {
     printf("START MAIN\n\n");
     //Test sottostanti devono terminare con la fine del programma e non con errore
 
-    mod=0;
+    mod=2;
 
 
     Test();
-    TestAppCorrect();
-    TestMatchConstructor();
     TestMatchCoRic();
     TestLet();
     TestFunRicJTHConstructor();

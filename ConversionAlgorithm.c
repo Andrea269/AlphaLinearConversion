@@ -120,7 +120,7 @@ struct List {
 void FreeRC(Node *node);
 
 /*****************************---PRINTING ---************************************/
-const char *print_label(enum TypeNode l) {
+const char *PrintLabel(enum TypeNode l) {
     switch (l) {
         case FVar:
             return "v";
@@ -149,8 +149,8 @@ const char *print_label(enum TypeNode l) {
     }
 }
 
-void print_node(FILE *f, Node *n) {
-    fprintf(f, "%d [label=\"%s\" ordering=\"out\"];\n", (long) n, print_label(n->label));
+void PrintNode(FILE *f, Node *n) {
+    fprintf(f, "%d [label=\"%s\" ordering=\"out\"];\n", (long) n, PrintLabel(n->label));
     ListItem *listElement = n->parentNodes->head;
     while (listElement->node != NULL) {
         fprintf(f, "%d -> %d;\n", (long) listElement->node, (long) n);
@@ -174,7 +174,7 @@ void PrintGraph(List *l, Node *focus) {
     ListItem *listElement = l->head;
     while (listElement->node != NULL) {
         if (listElement->node->rc > 0 || listElement->node->root == True)
-            print_node(f, listElement->node);
+            PrintNode(f, listElement->node);
         listElement = listElement->next;
     }
     if (focus != NULL) fprintf(f, "%d [color=\"red\"];\n", (long) focus);
